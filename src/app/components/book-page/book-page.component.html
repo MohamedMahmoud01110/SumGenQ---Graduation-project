@@ -1,0 +1,42 @@
+<section id="book_summarization">
+  <div class="container">
+    <div class="row ">
+      <div class=" d-flex justify-content-center align-items-center mb-5 p-5 ">
+          <div class="col-md-6  text-center p-5 bg-form  mb-2 form_container ">
+              <h3 class="mb-3 text-main">Enter an Article URL or Upload your file</h3>
+              <!-- Tabs -->
+              <div class="btn-group mb-4">
+                  <button class="btn bgg-secondary hh">Upload file</button>
+                  <button class="btn btn-secondary">Add URL</button>
+              </div>
+              <!-- File Upload Box -->
+              <div class="upload-box mb-2">
+                  <p class="text-mian">Select or Drop a file</p>
+                  <p class="text-main">We support .pdf, .doc, .docx files up to 25 MB</p>
+                  <input type="file" (change)="onFileSelected($event)" accept=".pdf" class="form-control mt-3 bg-main text-main">
+
+              </div>
+              <!-- Check Box and microphone -->
+              <div class="d-flex justify-content-between">
+                <div class="checkboxs  mb-4 float-start">
+                  <div class="exam-check">
+                      <input type="checkbox" id="myCheckbox" >
+                      <label for="myCheckbox" class="text-main mx-2">Exam Bot</label>
+                  </div>
+                  <!-- <div class="quiz-check">
+                      <input type="checkbox" id="myCheckbox" class="ms-3">
+                      <label for="myCheckbox" class="text-main mx-2">Online Quiz</label>
+                  </div> -->
+                </div>
+                <div class="microphone ">
+                    <button class="btn " disabled><i class="fa-solid fa-microphone" ></i></button>
+                </div>
+              </div>
+              <!-- Summarize Button -->
+              <button class="btn btn-upload text-main w-100">SUMMARIZE THIS</button>
+          </div>
+    </div>
+  </div>
+</div>
+
+</section>

@@ -1,0 +1,29 @@
+
+.upBtn{
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  z-index: 1000;
+  background-color:var(--secondary-color);
+  color: white;
+  border: none;
+  border-radius:10px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.upBtn:hover{
+  background-color:var(--hover-color);
+}
+
+@media all and (max-width: 1022px) {
+  .upBtn{
+  width: 37px;
+  height: 37px;
+
+  }
+}

@@ -1,0 +1,27 @@
+/* You can add global styles to this file, and also import other style files */
+
+
+:root {
+  --bg-main: rgb(231, 228, 225);
+  /* --bg-main: rgb(224, 223, 219); */
+  --text-main: #000000;
+  --link-color: #000000;
+  --hover-color: rgb(0, 173, 181, 0.8);
+  --bg-form: rgb(229, 229, 229);
+  --secondary-color: #00ADB5;
+}
+
+body.dark {
+  --bg-main: #222831;
+  --text-main: #ffffff;
+  --link-color: #ffffff;
+  --hover-color: rgb(0, 173, 181, 0.8);
+  --bg-form: #2D333B;
+  --secondary-color: #00ADB5;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+}
+

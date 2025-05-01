@@ -1,0 +1,96 @@
+.bg-main{
+  background-color: #222831;
+}
+.c-secondary{
+  color: #00ADB5;
+}
+.bgg-secondary{
+  background-color: #00ADB5;
+}
+.bg-form{
+  background-color: #2D333B;
+}
+.f-32{
+  font-size: 40px;
+}
+.w-60{
+  width: 60%;
+}
+.ts{
+  margin-top: -70px;
+}
+.tss{
+  margin-top: -80px;
+  margin-left: -20px;
+}
+label {
+  font-weight: bold;
+}
+input[type="range"] {
+  margin: 0 10px;
+
+}
+/* progress {
+  width: 200px;
+  height: 10px;
+  margin: 0 10px;
+} */
+.pro span {
+  font-size: 14px;
+  font-weight: bold;
+}
+.hh:hover{
+  background-color: rgb(0, 173, 181, 0.5);
+
+}
+
+
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 25%;
+  height: 10px;
+  background: #00ADB5;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+input[type="range"] {
+  margin: 0 10px;
+  margin-top: 15px;
+}
+
+
+
+
+.upload-box {
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  padding: 40px;
+  text-align: center;
+  border-radius: 10px;
+}
+.btn-upload {
+  background-color: #00ADB5; /* Purple button */
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+}
+.btn-upload:hover {
+  background-color: rgb(0, 173, 181, 0.5);
+}
+
+#navbar .navbar-nav  a{
+  color: #fff;
+}
+
+#navbar .navbar-nav a:hover{
+  color: #00ADB5;
+}

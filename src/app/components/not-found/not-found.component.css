@@ -1,0 +1,10 @@
+#not-found{
+  margin-bottom: 120px;
+
+}
+@media all and (max-width: 900px) {
+  img{
+    width: 100%;
+    height: auto;
+  }
+}

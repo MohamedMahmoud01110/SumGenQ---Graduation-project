@@ -1,0 +1,26 @@
+<section id="home" class="home bg-main p-3">
+  <div class="container">
+    <div class="row ">
+      <div class="col-md-6 my-auto">
+        <h1 class="text-main fw-bold text-uppercase mb-5">
+          Summarize any text in seconds –
+          <span class="c-secondary">Paste your content and get a concise summary instantly.</span>
+        </h1>
+      </div>
+
+      <div class="col-md-6 col-sm-12 my-auto">
+        <!-- Switches image based on theme -->
+        <img [src]="theme === 'dark' ? 'images/home.png' : 'images/home_light_2.png'" class="w-80 mx-4" alt="">
+      </div>
+    </div>
+  </div>
+</section>
+<section>
+  <app-scroll-top></app-scroll-top>
+</section>
+<section>
+  <app-project-details></app-project-details>
+</section>
+<section>
+  <app-our-features></app-our-features>
+</section>
