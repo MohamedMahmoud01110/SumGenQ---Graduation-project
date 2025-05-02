@@ -2,9 +2,42 @@
   margin-bottom: 120px;
 
 }
+
+.bgg-secondary{
+  background-color: var(--secondary-color);
+}
+.hh:hover{
+  background-color:var(--hover-color);
+
+
+}
+
+.ss{
+  border-radius: 10px;
+  border: #00ADB5;
+  color: var(--text-main);
+}
+
 @media all and (max-width: 900px) {
   img{
     width: 100%;
     height: auto;
   }
+}
+
+@media all and (max-width: 550px) {
+  button{
+    padding:10px !important ;
+    width: 60% !important;
+    margin: 1rem auto !important;
+  }
+  img{
+    width: 100% !important;
+    height: auto;
+  }
+  .box_container{
+    padding-top: 5rem !important;
+  }
+
+
 }

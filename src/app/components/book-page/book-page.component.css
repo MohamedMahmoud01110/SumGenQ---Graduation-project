@@ -36,9 +36,7 @@ input[type="range"] {
   background-color: rgb(0, 173, 181, 0.5);
 
 }
-.voice{
-  border: #00ADB5;
-}
+
 
 input[type="range"] {
   -webkit-appearance: none;

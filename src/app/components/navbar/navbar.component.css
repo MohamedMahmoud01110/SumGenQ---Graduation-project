@@ -84,7 +84,6 @@ body {
   right: 280px;
   margin-bottom: 13px;
   border: #00ADB5;
-
 }
 .theme_btn:hover{
   color: var(--hover-color);

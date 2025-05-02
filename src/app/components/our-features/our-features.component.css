@@ -99,5 +99,8 @@ p{
     width: 100%;
     height: auto;
   }
+  .reverse{
+    flex-direction: column-reverse;
+  }
 
 }

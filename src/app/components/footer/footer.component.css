@@ -1,5 +1,5 @@
 footer {
-  padding: 0.75rem 0;
+  padding: 0.55rem 0;
   background: var(--bg-form);
   box-shadow: 0 0 2.5px rgba(0, 0, 0, 0.1);
 
@@ -19,3 +19,6 @@ footer p{
 
 
 }
+@media all and (max-width: 550px) {
+
+ }
