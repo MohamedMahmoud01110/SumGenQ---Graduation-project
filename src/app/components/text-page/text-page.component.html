@@ -54,9 +54,7 @@
         <img [src]="copied ? 'images/check-mark.jpg' : 'images/copy.jpg'" class="copy_img"
           [class.disabled]="summarizedText.value === ''" alt="Copy Icon"
           [title]="copied ? 'Text copied!' : 'Copy Text'"
-          (click)="summarizedText.value !== '' && copyText()"
-          [style.width]="copied ? '26px' : '20px'"
-          [style.height]="copied ? '26px' : '20px'" >
+          (click)="summarizedText.value !== '' && copyText()">
       </div>
     </div>
   </div>
