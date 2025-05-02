@@ -102,5 +102,15 @@ p{
   .reverse{
     flex-direction: column-reverse;
   }
+  p{
+    padding: 0% !important;
+  }
+  span{
+    margin-left: 0% !important;
+  }
+  .services-title{
+    margin-bottom: 0.9rem !important;
+  }
+
 
 }

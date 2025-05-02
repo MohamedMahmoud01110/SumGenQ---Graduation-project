@@ -1,49 +1,58 @@
 <section id="text_summarization " class="text">
   <div class="container">
-
-      <div class="row  bg-form p-3  pt-5 pb-2 rounded mb-5 ">
-          <div class="col-md-6 pb-4 ps-4 summarize_container">
-              <form>
-                  <div class="mb-1">
-                    <div class="d-flex justify-content-between ">
-                      <label for="exampleFormControlTextarea1" class="form-label text-main fw-bold ">Enter your text here</label>
-
-                    </div>
-                    <div class="d-flex justify-content-between btns_container">
-                      <span class="c-secondary fw-bold fst-italic feat  my-auto">No character limit.</span>
-                      <div class="d-flex justify-content-between align-content-center mb-2">
-                        <button (click)="exampleText($event)" class=" bgg-secondary hh tex-btn text-main  p-2 ss px-3 text_example " title="Display a Text Example">Text Example</button>
-                        <i class="fa-solid fa-trash mx-4 mt-1 clr-icon" title="Clear Text" (click)="clearText()"></i>
-
-                      </div>
-                    </div>
-                      <textarea  [formControl]="userInput" class="form-control bg-form text-main"  id="exampleFormControlTextarea1"  rows="17" name="text"></textarea>
-                  </div>
-                  <div class="checkboxs d-flex justify-content-between mb-3 ">
-                    <div class="exam-check">
-                        <input type="checkbox" id="myCheckbox" >
-                        <label for="myCheckbox" class="text-main mx-2">Exam Bot</label>
-                    </div>
-                  </div>
-                  <div class="d-flex modes_container">
-                      <h3 class="text-main">Modes: </h3>
-                      <div class=" w-100 mx-4 bg-form rounded-5  d-flex ">
-                          <p class="text-main px-3 fw-bold my-1" >Summary Length: </p>
-                          <input type="range" id=" progress-bar" min="1" max="100" value="50"  name="length">
-                          <span id="length-value" class="text-main my-2">50%</span>
-                      </div>
-                  </div>
-                  <button  (click)="submitText($event)"  class=" mt-3 bgg-secondary hh p-2 ss px-3">Summarize</button>
-              </form>
-          </div>
-          <div class="col-md-6  marg pe-4 summarized_container ">
-              <div >
-                  <label for="exampleFormControlTextarea1" class="form-label text-main">Summarized</label>
-                  <textarea [formControl]="summarizedText"  class="form-control bg-form text-main" id="exampleFormControlTextarea1" rows="17" name="text" readonly></textarea>
+    <div class="row bg-form p-3 pt-5 pb-2 rounded mb-5">
+      <div class="col-md-6 pb-4 ps-4 summarize_container">
+        <form class="position-relative">
+          <div class="mb-1">
+            <div class="d-flex justify-content-between ">
+              <label for="exampleFormControlTextarea1" class="form-label text-main fw-bold ">Enter your text here</label>
+            </div>
+            <div class="d-flex justify-content-between btns_container">
+              <span class="c-secondary fw-bold fst-italic feat my-auto">No character limit.</span>
+              <div class="d-flex justify-content-between align-content-center mb-2 buttons_container">
+                <button (click)="exampleText($event)" class="bgg-secondary hh tex-btn text-main p-2 ss px-3 text_example " title="Display a Text Example">Text Example</button>
+                <i class="fa-solid fa-trash mx-4 mt-1 clr-icon" title="Clear Text" (click)="clearText()"></i>
               </div>
-              <button class="btn mt-1 voice "[disabled]="summarizedText.value === ''"><i class="fa-solid fa-microphone voice-icon" ></i></button>
+            </div>
+            <textarea [formControl]="userInput" class="form-control bg-form text-main" id="exampleFormControlTextarea1" rows="17" name="text" (input)="updateWordCountUserInput()"></textarea>
           </div>
+          <!-- Word Count for User Input -->
+          <div class="word-count word-count-1  text-main ms-3">
+            <p>{{ wordCountUserInput }} word{{ wordCountUserInput !== 1 ? 's' : '' }}</p>
+          </div>
+
+          <div class="checkboxs d-flex justify-content-between mb-3 ">
+            <div class="exam-check">
+              <input type="checkbox" id="myCheckbox">
+              <label for="myCheckbox" class="text-main mx-2">Exam Bot</label>
+            </div>
+          </div>
+
+          <div class="d-flex modes_container">
+            <h3 class="text-main">Modes: </h3>
+            <div class="w-100 mx-4 bg-form rounded-5 d-flex ">
+              <p class="text-main px-3 fw-bold my-1">Summary Length: </p>
+              <input type="range" id="progress-bar" min="1" max="100" value="50" name="length">
+              <span id="length-value" class="text-main my-2">50%</span>
+            </div>
+          </div>
+          <button (click)="submitText($event)" class="mt-3 bgg-secondary hh p-2 ss px-3">Summarize</button>
+        </form>
       </div>
 
+      <div class="col-md-6 marg pe-4 summarized_container">
+        <div>
+          <label for="exampleFormControlTextarea1" class="form-label text-main">Summarized</label>
+          <textarea [formControl]="summarizedText" class="form-control bg-form text-main" id="exampleFormControlTextarea1" rows="17" name="text" readonly (input)="updateWordCountSummarizedText()"></textarea>
+        </div>
+        <!-- Word Count for Summarized Text -->
+        <div class="word-count word-count-2 text-main ms-3">
+          <p>{{ wordCountSummarizedText }} word{{ wordCountSummarizedText !== 1 ? 's' : '' }}</p>
+        </div>
+
+        <button class="btn mt-1 voice "[disabled]="summarizedText.value === ''"><i class="fa-solid fa-microphone voice-icon"></i></button>
+        <img [src]="copied ? 'images/check-mark.jpg' : 'images/copy.jpg'" class="copy_img" [class.disabled]="summarizedText.value === ''" alt="Copy Icon" [title]="copied ? 'Text copied!' : 'Copy Text'" (click)="summarizedText.value !== '' && copyText()">
+      </div>
+    </div>
   </div>
 </section>
