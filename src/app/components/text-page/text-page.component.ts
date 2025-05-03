@@ -1,10 +1,11 @@
+import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-text-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule,CommonModule],
   templateUrl: './text-page.component.html',
   styleUrls: ['./text-page.component.css']
 })
@@ -12,15 +13,20 @@ export class TextPageComponent {
   userInput = new FormControl('');
   summarizedText = new FormControl('');
   copied: boolean = false;
+  isSpeaking : boolean = false;
+  availableVoices: SpeechSynthesisVoice[] = [];
+selectedVoiceURI: string = '';
 
   // Variables for word count
   wordCountUserInput: number = 0;
   wordCountSummarizedText: number = 0;
 
   ngOnInit() {
+
     // Initialize word count calculation when the component is loaded
     this.updateWordCountUserInput();
     this.updateWordCountSummarizedText();
+
   }
 
   // Method to update word count for user input
@@ -82,4 +88,50 @@ export class TextPageComponent {
       });
     }
   }
+
+
+  toggleSpeech(): void {
+    if (this.isSpeaking) {
+      this.stopSpeech();
+    } else {
+      this.speakText();
+    }
+  }
+
+  speakText(): void {
+    const text = this.summarizedText.value;
+    if (!text || text.trim() === '') return;
+
+    // Cancel any previous speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => v.name.includes('Google') || v.default);
+    if (preferredVoice) utterance.voice = preferredVoice;
+
+    this.isSpeaking = true;
+
+    utterance.onend = () => {
+      this.isSpeaking = false;
+    };
+    utterance.onerror = () => {
+      this.isSpeaking = false;
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  stopSpeech(): void {
+    window.speechSynthesis.cancel();
+    this.isSpeaking = false;
+  }
+
+
+
 }

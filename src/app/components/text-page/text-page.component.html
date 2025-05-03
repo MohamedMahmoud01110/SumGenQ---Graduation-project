@@ -50,7 +50,12 @@
           <p>{{ wordCountSummarizedText }} word{{ wordCountSummarizedText !== 1 ? 's' : '' }}</p>
         </div>
 
-        <button class="btn mt-1 voice "[disabled]="summarizedText.value === ''"><i class="fa-solid fa-microphone voice-icon"></i></button>
+        <button class="btn mt-1 voice"
+        [class.hide]="summarizedText.value === ''"
+        title="{{ isSpeaking ? 'Stop listening' : 'Click to listen' }}"
+        (click)="toggleSpeech()">
+        <i [ngClass]="isSpeaking ? 'fa-solid fa-microphone' : 'fa-solid fa-microphone-slash'" class="voice-icon"></i>
+        </button>
         <img [src]="copied ? 'images/check-mark.jpg' : 'images/copy.jpg'" class="copy_img"
           [class.disabled]="summarizedText.value === ''" alt="Copy Icon"
           [title]="copied ? 'Text copied!' : 'Copy Text'"
