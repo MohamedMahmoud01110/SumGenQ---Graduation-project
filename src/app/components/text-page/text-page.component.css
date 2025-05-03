@@ -158,9 +158,17 @@ font-size: 14px !important;
 }
 .voice{
   border: #00ADB5;
+  position: absolute;
+  bottom: 11.2rem;
+  right: 4.5rem;
+  cursor: pointer;
 }
 
-
+.voice.hide {
+  opacity: 0;
+  pointer-events: none;
+  cursor: not-allowed;
+}
 @media all and (max-width: 768px) {
   .f-32{
     font-size: 30px;
@@ -200,7 +208,10 @@ font-size: 14px !important;
   .modes_container{
     flex-direction: column;
   }
-
+}
+.copy_img{
+  width: 23px;
+  height: 23px;
 }
 @media all and (max-width: 992px){
   .text_example{
@@ -287,3 +298,59 @@ font-size: 14px !important;
   }
 }
 
+@media all and (max-width: 998px) {
+  .voice{
+    bottom: 0.5rem;
+  }
+  .voice-icon{
+    font-size: 21px;
+  }
+  .copy_img{
+    bottom: 1rem !important;
+  }
+  .word-count-2{
+    bottom: -.2rem;
+  }
+  .word-count p{
+    font-size: 17px ;
+  }
+}
+
+
+@media all and (min-width: 993px)  and (max-width: 1199.5px) {
+  .voice{
+    bottom: 12.4rem;
+  }
+  .voice-icon{
+    font-size: 21px;
+  }
+  .copy_img{
+    bottom: 13rem !important;
+  }
+  .word-count-2{
+    bottom: 11.8rem;
+  }
+}
+@media all and (min-width: 1199.5px)  and (max-width: 1200px){
+  .word-count-2{
+    bottom: 10.5rem;
+  }
+
+}
+@media all and (min-width: 1200px)  and (max-width: 1300px){
+
+.copy_img{
+  width: 23px;
+  height: 23px;
+}
+}
+@media all and (max-width: 550px) {
+
+  .copy_img{
+    bottom: 1.09rem !important;
+
+  }
+  .word-count p{
+    font-size: 17px ;
+  }
+}
