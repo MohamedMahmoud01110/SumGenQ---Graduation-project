@@ -15,7 +15,9 @@ export class TextPageComponent {
   copied: boolean = false;
   isSpeaking : boolean = false;
   availableVoices: SpeechSynthesisVoice[] = [];
-selectedVoiceURI: string = '';
+  selectedVoiceURI: string = '';
+  showArabicWarning: boolean = false;
+
 
   // Variables for word count
   wordCountUserInput: number = 0;
@@ -41,15 +43,41 @@ selectedVoiceURI: string = '';
     this.wordCountSummarizedText = text ? text.split(/\s+/).length : 0;
   }
 
+  // submitText(event: Event) {
+  //   event.preventDefault();
+  //   this.summarizedText.setValue(this.userInput.value);
+  //   console.log(this.userInput.value);
+
+  //   // Update word count after submitting text
+  //   this.updateWordCountUserInput();
+  //   this.updateWordCountSummarizedText();
+  // }
   submitText(event: Event) {
     event.preventDefault();
-    this.summarizedText.setValue(this.userInput.value);
-    console.log(this.userInput.value);
 
-    // Update word count after submitting text
+    const text = this.userInput.value?.trim() || '';
+    const arabicRegex = /[\u0600-\u06FF]/;
+
+    if (arabicRegex.test(text)) {
+      this.showArabicWarning = true;
+      this.summarizedText.setValue('');
+      this.wordCountSummarizedText = 0;
+
+      setTimeout(() => {
+        this.showArabicWarning = false;
+      }, 2500);
+
+      return;
+    }
+
+    this.showArabicWarning = false;
+    this.summarizedText.setValue(this.userInput.value);
     this.updateWordCountUserInput();
     this.updateWordCountSummarizedText();
   }
+
+
+
 
   clearText() {
     this.userInput.setValue('');
