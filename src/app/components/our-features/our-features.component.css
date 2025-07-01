@@ -111,6 +111,14 @@ p{
   .services-title{
     margin-bottom: 0.9rem !important;
   }
+}
 
-
+@media all and (max-width: 750px) {
+  img{
+    width: 100%;
+    height: auto;
+  }
+  .reverse{
+    flex-direction: column-reverse;
+  }
 }

@@ -1,0 +1,264 @@
+<section class="quiz-viewer-section">
+  <div class="container">
+    <!-- Header -->
+    <div class="quiz-header text-center mb-5">
+      <h1 class="quiz-title">
+        <i class="fas fa-question-circle"></i>
+        Quiz Questions
+      </h1>
+      <p class="quiz-subtitle">
+        Answer all questions below. You can review and change your answers before submitting.
+      </p>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="alert alert-danger text-center mb-4" role="alert">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-section mb-4">
+      <div class="progress-info">
+        <span class="progress-text">Completion: {{ getCompletionPercentage().toFixed(1) }}%</span>
+        <span class="questions-count">{{ questions.length }} Questions</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="getCompletionPercentage()"></div>
+      </div>
+    </div>
+
+    <!-- Questions Container -->
+    <div class="questions-container" *ngIf="questions.length > 0">
+      <div *ngFor="let question of questions; let i = index" class="question-card mb-4">
+        <div class="question-header">
+          <span class="question-number">Question {{ i + 1 }}</span>
+          <span class="question-type">
+            {{ question.type === 'multiple_choice' ? 'Multiple Choice' :
+               question.type === 'true_false' ? 'True/False' : 'Essay' }}
+          </span>
+        </div>
+
+        <div class="question-content">
+          <h3 class="question-text">{{ question.question }}</h3>
+
+          <!-- Multiple Choice Options -->
+          <div *ngIf="question.type === 'multiple_choice'" class="options-list">
+            <div
+              *ngFor="let option of question.options; let optionIndex = index"
+              class="option-item"
+              [class.selected]="getMCQUserAnswer(question.id) === getOptionLetter(optionIndex)"
+              (click)="selectMCQAnswer(question.id, option, optionIndex)">
+              <span class="option-letter">{{ getOptionLetter(optionIndex) }}</span>
+              <span class="option-text">{{ option }}</span>
+            </div>
+          </div>
+
+          <!-- True/False Options -->
+          <div *ngIf="question.type === 'true_false'" class="options-list">
+            <div
+              class="option-item"
+              [class.selected]="getTrueFalseUserAnswer(question.id) === true"
+              (click)="selectTrueFalseAnswer(question.id, true)">
+              <span class="option-letter">T</span>
+              <span class="option-text">True</span>
+            </div>
+            <div
+              class="option-item"
+              [class.selected]="getTrueFalseUserAnswer(question.id) === false"
+              (click)="selectTrueFalseAnswer(question.id, false)">
+              <span class="option-letter">F</span>
+              <span class="option-text">False</span>
+            </div>
+          </div>
+
+          <!-- Essay Question -->
+          <div *ngIf="question.type === 'essay'" class="essay-section">
+            <div class="essay-input-container">
+              <textarea
+                #essayTextarea
+                class="form-control essay-textarea"
+                rows="6"
+                placeholder="Type your answer here..."
+                [value]="getEssayUserAnswer(question.id)"
+                (input)="updateEssayAnswer(question.id, essayTextarea.value)">
+              </textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="submit-section text-center mt-5">
+        <button
+          class="btn submit-quiz-btn"
+          [disabled]="!isQuizComplete() || isLoading"
+          (click)="submitQuiz()">
+          <i *ngIf="!isLoading" class="fas fa-paper-plane"></i>
+          <i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
+          {{ isLoading ? 'Submitting...' : 'Submit Quiz' }}
+        </button>
+
+        <button
+          class="btn download-quiz-btn ms-3"
+          [disabled]="questions.length === 0 || isLoading"
+          (click)="downloadQuiz()">
+          <i *ngIf="!isLoading" class="fas fa-download"></i>
+          <i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
+          {{ isLoading ? 'Downloading...' : 'Download Quiz' }}
+        </button>
+
+        <button class="btn btn-outline-secondary ms-3" (click)="goBackToQuiz()">
+          <i class="fas fa-arrow-left"></i>
+          Back to Quiz Generator
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="questions.length === 0 && !errorMessage" class="text-center">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3">Loading quiz questions...</p>
+    </div>
+  </div>
+
+  <!-- Results Modal -->
+  <div *ngIf="showResultsModal" class="modal-overlay" (click)="closeResultsModal()">
+    <div class="modal-container results-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <i class="fas fa-trophy"></i>
+          Quiz Results
+        </h2>
+        <button class="close-modal" (click)="closeResultsModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Score Summary -->
+        <div class="score-summary mb-4">
+          <div class="score-circle">
+            <div class="score-value">{{ scorePercentage.toFixed(1) }}%</div>
+            <div class="score-label">Final Score</div>
+          </div>
+
+          <div class="score-message">
+            <div *ngIf="scorePercentage >= 90" class="excellent-score">
+              <i class="fas fa-star"></i>
+              Excellent! Outstanding performance!
+            </div>
+            <div *ngIf="scorePercentage >= 70 && scorePercentage < 90" class="good-score">
+              <i class="fas fa-thumbs-up"></i>
+              Good job! Well done!
+            </div>
+            <div *ngIf="scorePercentage >= 50 && scorePercentage < 70" class="average-score">
+              <i class="fas fa-hand-peace"></i>
+              Not bad! Keep practicing!
+            </div>
+            <div *ngIf="scorePercentage < 50" class="poor-score">
+              <i class="fas fa-lightbulb"></i>
+              Keep learning! Review the material.
+            </div>
+          </div>
+        </div>
+
+        <!-- Question Review -->
+        <div class="question-review">
+          <h4 class="review-title mb-3">
+            <i class="fas fa-eye"></i>
+            Question Review
+          </h4>
+
+          <div class="review-list">
+            <div *ngFor="let question of questions; let i = index" class="review-item">
+              <div class="review-question-header">
+                <span class="question-number">Q{{ i + 1 }}</span>
+                <span class="question-type-badge">
+                  {{ question.type === 'multiple_choice' ? 'MCQ' :
+                     question.type === 'true_false' ? 'T/F' : 'Essay' }}
+                </span>
+              </div>
+
+              <div class="review-question-text">
+                {{ question.question }}
+              </div>
+
+              <!-- MCQ Review -->
+              <div *ngIf="question.type === 'multiple_choice'" class="review-answer">
+                <div class="answer-row">
+                  <span class="answer-label">Your Answer:</span>
+                  <span class="answer-value" [class.correct]="isMCQCorrect(question)" [class.incorrect]="!isMCQCorrect(question)">
+                    {{ getMCQUserAnswerText(question) }}
+                  </span>
+                </div>
+                <div class="answer-row" *ngIf="!isMCQCorrect(question)">
+                  <span class="answer-label">Correct Answer:</span>
+                  <span class="answer-value correct">{{ getMCQCorrectAnswerText(question) }}</span>
+                </div>
+              </div>
+
+              <!-- True/False Review -->
+              <div *ngIf="question.type === 'true_false'" class="review-answer">
+                <div class="answer-row">
+                  <span class="answer-label">Your Answer:</span>
+                  <span class="answer-value" [class.correct]="isTrueFalseCorrect(question)" [class.incorrect]="!isTrueFalseCorrect(question)">
+                    {{ getTrueFalseUserAnswer(question.id) === true ? 'True' :
+                       getTrueFalseUserAnswer(question.id) === false ? 'False' : 'Not answered' }}
+                  </span>
+                </div>
+                <div class="answer-row" *ngIf="!isTrueFalseCorrect(question)">
+                  <span class="answer-label">Correct Answer:</span>
+                  <span class="answer-value correct">{{ question.correctAnswer ? 'True' : 'False' }}</span>
+                </div>
+              </div>
+
+              <!-- Essay Review -->
+              <div *ngIf="question.type === 'essay'" class="review-answer">
+                <div class="answer-row">
+                  <span class="answer-label">Your Answer:</span>
+                  <div class="essay-answer-content">
+                    {{ getEssayUserAnswer(question.id) || 'Not answered' }}
+                  </div>
+                </div>
+                <div class="answer-row">
+                  <span class="answer-label">Ideal Answer:</span>
+                  <div class="ideal-answer-content">
+                    {{ question.correctAnswer }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Essay Feedback -->
+        <div *ngIf="gradeResponse && gradeResponse.essay_feedback && gradeResponse.essay_feedback.length > 0" class="essay-feedback-section mt-4">
+          <h4 class="feedback-title mb-3">
+            <i class="fas fa-comments"></i>
+            Essay Feedback
+          </h4>
+          <div class="feedback-list">
+            <div *ngFor="let feedback of gradeResponse.essay_feedback; let i = index" class="feedback-item">
+              <h6 class="feedback-question">Essay Question {{ i + 1 }}:</h6>
+              <p class="feedback-content">{{ feedback }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="closeResultsModal()">
+          <i class="fas fa-check"></i>
+          Close
+        </button>
+        <button class="btn btn-outline-secondary" (click)="goBackToQuiz()">
+          <i class="fas fa-plus"></i>
+          New Quiz
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

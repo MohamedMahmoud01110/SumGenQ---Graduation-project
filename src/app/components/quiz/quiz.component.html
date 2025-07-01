@@ -1,0 +1,390 @@
+<section id="quiz" class="quiz-section">
+  <div class="container">
+    <!-- Quiz Header -->
+    <div class="quiz-header text-center mb-5">
+      <h1 class="quiz-title">
+        <i class="fas fa-question-circle"></i>
+        Interactive Quiz
+      </h1>
+      <p class="quiz-subtitle">
+        Test your knowledge with AI-generated questions from your documents
+      </p>
+    </div>
+
+    <!-- Error Message Display -->
+    <div *ngIf="errorMessage" class="alert alert-danger text-center mb-4" role="alert">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Success Message Display -->
+    <div *ngIf="quizResponse && !errorMessage" class="alert alert-success text-center mb-4" role="alert">
+      <i class="fas fa-check-circle me-2"></i>
+      Quiz generated successfully! You can now download it or start taking the quiz.
+    </div>
+
+    <!-- Quiz Selection Screen -->
+    <div *ngIf="!quizStarted && !quizCompleted" class="quiz-selection">
+      <div class="selection-card">
+        <h2 class="selection-title">
+          <i class="fas fa-book-open"></i>
+          Create Your Quiz
+        </h2>
+
+        <!-- File Upload Section -->
+        <div class="d-flex justify-content-center align-items-center mb-5 p-5 mt-3">
+          <div class="col-md-8 text-center p-5 mb-2 form_container rounded-5">
+            <div class="upload-section">
+              <div class="upload-area" id="uploadArea"
+                (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)"
+                (drop)="onDrop($event)"
+                (click)="triggerFileInput()"
+                [class.hide]="selectedFile">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Upload Document</h3>
+                <p>Drag & drop or click to select PDF, DOCX, or TXT files</p>
+                <input type="file" id="fileInput" #fileInput accept=".pdf,.docx,.txt" hidden *ngIf="!selectedFile"
+                  (change)="onFileSelected($event)"/>
+                <button class="upload-btn text-main choose_btn" type="button" (click)="triggerFileInput($event)">
+                  Choose File
+                </button>
+              </div>
+              <!-- Show file name if selected -->
+              <div *ngIf="selectedFile" class="mt-2 show_file_info file-info rounded-2 w-100 my-2 py-3">
+                <div>
+                  <i class="fa-solid fa-file-alt text-main" style="font-size: 22px;"></i>
+                  <span class="ms-1 text-black">{{ selectedFile.name }}</span>
+                  <span class="ms-1 text-black" *ngIf="selectedFile.size > 0"> {{formatFileSize(selectedFile.size)}}</span>
+                </div>
+                <button class="btn btn-sm btn-outline-danger ms-2" (click)="removeFile()">Remove</button>
+              </div>
+        </div>
+
+        <!-- Quiz Settings -->
+            <div class="quiz-settings mt-4">
+          <div class="setting-group">
+            <label class="form-label">Difficulty Level:</label>
+            <select class="form-select" [(ngModel)]="difficulty">
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-center gap-3 mt-4">
+              <button
+                *ngIf="!quizResponse"
+                class="btn start-quiz-btn"
+                [disabled]="!selectedFile || isLoading"
+                (click)="startQuiz()">
+                <i *ngIf="!isLoading" class="fas fa-play"></i>
+                <i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
+                {{ isLoading ? 'Generating Quiz...' : 'Generate Quiz' }}
+              </button>
+
+              <button
+                *ngIf="quizResponse"
+                class="btn start-quiz-btn"
+                (click)="navigateToQuizViewer()">
+                <i class="fas fa-play"></i>
+                Start Quiz
+              </button>
+
+              <button
+                class="btn download-quiz-btn"
+                [disabled]="!selectedFile || !quizResponse || isLoading"
+                (click)="downloadQuiz()">
+                <i *ngIf="!isLoading" class="fas fa-download"></i>
+                <i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
+                {{ isLoading ? 'Downloading...' : 'Download Quiz' }}
+              </button>
+            </div>
+          </div>
+          </div>
+
+        <!-- No uploaded file warning-->
+        <div *ngIf="showNoFileWarning" class="overlay2">
+          <div class="warning_box2 rounded-5 p-4 text-center">
+            <div class="bg p-3 rounded-5">
+              <span class="rounded-5"></span>
+              <img src="images/no_enough_text.svg" alt="" class="">
+            </div>
+            <div class="warning_box_content text-center rounded-5 p-4">
+              <i class="fa-solid fa-xmark close" (click)="closeWarning()"></i>
+              <i class="fa-solid fa-triangle-exclamation fa-2x text-danger mb-3 warning_icon"></i>
+              <h4 class="fw-bold mb-2">No File Uploaded</h4>
+              <p>Please upload or drop a document before starting the quiz.</p>
+              <div class="d-flex justify-content-center mt-3">
+                <button type="button"
+                        class="btn btn1 me-2"
+                        (click)="showNoFileWarning = false">
+                  Try Again
+                </button>
+                <button type="button"
+                        class="btn btn2 btn-outline-secondary"
+                        (click)="showNoFileWarning = false">
+                  Ignore
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- unsupported file type warning-->
+        <div *ngIf="showUnsupportedFileWarning" class="overlay2">
+          <div class="warning_box2 rounded-5 p-4 text-center">
+            <div class="bg p-3 rounded-5">
+              <span class="rounded-5"></span>
+              <img src="images/no_enough_text.svg" alt="" class="">
+            </div>
+            <div class="warning_box_content text-center rounded-5 p-4">
+              <i class="fa-solid fa-xmark close" (click)="closeWarning()"></i>
+              <i class="fa-solid fa-triangle-exclamation fa-2x text-danger mb-3 warning_icon"></i>
+              <h4 class="fw-bold mb-2">Unsupported File Type</h4>
+              <p>Please upload a PDF or Word document (.doc, .docx) only.</p>
+              <div class="d-flex justify-content-center mt-3">
+                <button type="button"
+                        class="btn btn1 me-2"
+                        (click)="showUnsupportedFileWarning = false">
+                  Try Again
+                </button>
+                <button type="button"
+                        class="btn btn2 btn-outline-secondary"
+                        (click)="showUnsupportedFileWarning = false">
+                  Ignore
+        </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quiz Interface -->
+    <div *ngIf="quizStarted && !quizCompleted" class="quiz-interface">
+      <!-- Progress Bar -->
+      <div class="progress-section mb-4">
+        <div class="progress-info">
+          <span class="progress-text">Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</span>
+          <span class="timer" [class.warning]="timeLeft <= 10">
+            <i class="fas fa-clock"></i>
+            {{ timeLeft }}s
+          </span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="progressPercentage"></div>
+        </div>
+      </div>
+
+      <!-- Question Card -->
+      <div class="question-card">
+        <div class="question-header">
+          <span class="question-number">Q{{ currentQuestionIndex + 1 }}</span>
+          <span class="question-type">{{ currentQuestion?.type === 'multiple_choice' ? 'Multiple Choice' : currentQuestion?.type === 'true_false' ? 'True/False' : 'Essay' }}</span>
+        </div>
+
+        <div class="question-content">
+          <h3 class="question-text">{{ currentQuestion?.question }}</h3>
+
+          <!-- Multiple Choice Options -->
+          <div *ngIf="currentQuestion?.type === 'multiple_choice'" class="options-list">
+            <div
+              *ngFor="let option of currentQuestion?.options; let i = index"
+              class="option-item"
+              [class.selected]="selectedAnswer === i"
+              [class.correct]="showResult && option === currentQuestion?.correctAnswer"
+              [class.incorrect]="showResult && selectedAnswer === i && option !== currentQuestion?.correctAnswer"
+              (click)="selectAnswer(i)">
+              <span class="option-letter">{{ getOptionLetter(i) }}</span>
+              <span class="option-text">{{ option }}</span>
+              <i *ngIf="showResult && option === currentQuestion?.correctAnswer" class="fas fa-check correct-icon"></i>
+              <i *ngIf="showResult && selectedAnswer === i && option !== currentQuestion?.correctAnswer" class="fas fa-times incorrect-icon"></i>
+            </div>
+          </div>
+
+          <!-- True/False Options -->
+          <div *ngIf="currentQuestion?.type === 'true_false'" class="options-list">
+            <div
+              class="option-item"
+              [class.selected]="selectedAnswer === 0"
+              [class.correct]="showResult && currentQuestion?.correctAnswer === true"
+              [class.incorrect]="showResult && selectedAnswer === 0 && currentQuestion?.correctAnswer !== true"
+              (click)="selectAnswer(0)">
+              <span class="option-letter">T</span>
+              <span class="option-text">True</span>
+              <i *ngIf="showResult && currentQuestion?.correctAnswer === true" class="fas fa-check correct-icon"></i>
+              <i *ngIf="showResult && selectedAnswer === 0 && currentQuestion?.correctAnswer !== true" class="fas fa-times incorrect-icon"></i>
+            </div>
+            <div
+              class="option-item"
+              [class.selected]="selectedAnswer === 1"
+              [class.correct]="showResult && currentQuestion?.correctAnswer === false"
+              [class.incorrect]="showResult && selectedAnswer === 1 && currentQuestion?.correctAnswer !== false"
+              (click)="selectAnswer(1)">
+              <span class="option-letter">F</span>
+              <span class="option-text">False</span>
+              <i *ngIf="showResult && currentQuestion?.correctAnswer === false" class="fas fa-check correct-icon"></i>
+              <i *ngIf="showResult && selectedAnswer === 1 && currentQuestion?.correctAnswer !== false" class="fas fa-times incorrect-icon"></i>
+            </div>
+          </div>
+
+          <!-- Essay Question -->
+          <div *ngIf="currentQuestion?.type === 'essay'" class="essay-section">
+            <div class="essay-input-container">
+              <textarea
+                class="form-control essay-textarea"
+                rows="6"
+                placeholder="Type your answer here..."
+                [(ngModel)]="essayAnswer"
+                [disabled]="showResult">
+              </textarea>
+            </div>
+
+            <!-- Show ideal answer when result is displayed -->
+            <div *ngIf="showResult" class="ideal-answer mt-3">
+              <h5 class="text-success">
+                <i class="fas fa-lightbulb me-2"></i>
+                Ideal Answer:
+              </h5>
+              <div class="ideal-answer-content">
+                {{ currentQuestion?.correctAnswer }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="question-actions">
+          <button
+            *ngIf="!showResult"
+            class="btn submit-btn"
+            [disabled]="(selectedAnswer === null && essayAnswer.trim() === '') || isLoading"
+            (click)="submitAnswer()">
+            <i class="fas fa-paper-plane"></i>
+            Submit Answer
+          </button>
+
+          <button
+            *ngIf="showResult"
+            class="btn next-btn"
+            [disabled]="isLoading"
+            (click)="nextQuestion()">
+            <i class="fas fa-arrow-right"></i>
+            {{ isLastQuestion ? 'Finish Quiz' : 'Next Question' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quiz Results -->
+    <div *ngIf="quizCompleted" class="quiz-results">
+      <div class="results-card">
+        <div class="results-header">
+          <h2 class="results-title">
+            <i class="fas fa-trophy"></i>
+            Quiz Results
+          </h2>
+        </div>
+
+        <div class="results-stats">
+          <div class="stat-item">
+            <div class="stat-value">{{ questions.length }}</div>
+            <div class="stat-label">Total Questions</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ scorePercentage.toFixed(1) }}%</div>
+            <div class="stat-label">Score</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ timeSpent }}</div>
+            <div class="stat-label">Time Spent</div>
+          </div>
+          <div class="stat-item" *ngIf="gradeResponse">
+            <div class="stat-value">{{ gradeResponse.essay_feedback.length || 0 }}</div>
+            <div class="stat-label">Essay Feedback</div>
+          </div>
+        </div>
+
+        <!-- Essay Feedback Section -->
+        <div *ngIf="gradeResponse && gradeResponse.essay_feedback && gradeResponse.essay_feedback.length > 0" class="essay-feedback-section mt-4">
+          <h4 class="text-success mb-3">
+            <i class="fas fa-comments me-2"></i>
+            Essay Feedback
+          </h4>
+          <div class="feedback-list">
+            <div *ngFor="let feedback of gradeResponse.essay_feedback; let i = index" class="feedback-item">
+              <h6 class="feedback-question">Essay Question {{ i + 1 }}:</h6>
+              <p class="feedback-content">{{ feedback }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="score-message">
+          <div *ngIf="scorePercentage >= 90" class="excellent-score">
+            <i class="fas fa-star"></i>
+            Excellent! Outstanding performance!
+          </div>
+          <div *ngIf="scorePercentage >= 70 && scorePercentage < 90" class="good-score">
+            <i class="fas fa-thumbs-up"></i>
+            Good job! Well done!
+          </div>
+          <div *ngIf="scorePercentage >= 50 && scorePercentage < 70" class="average-score">
+            <i class="fas fa-hand-peace"></i>
+            Not bad! Keep practicing!
+          </div>
+          <div *ngIf="scorePercentage < 50" class="poor-score">
+            <i class="fas fa-lightbulb"></i>
+            Keep learning! Review the material.
+          </div>
+        </div>
+
+        <div class="results-actions">
+          <button class="btn retry-btn" (click)="retryQuiz()">
+            <i class="fas fa-redo"></i>
+            Try Again
+          </button>
+          <button class="btn new-quiz-btn" (click)="newQuiz()">
+            <i class="fas fa-plus"></i>
+            New Quiz
+          </button>
+          <button class="btn review-btn" (click)="reviewAnswers()">
+            <i class="fas fa-eye"></i>
+            Review Answers
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Answers Modal -->
+    <div *ngIf="showReviewModal" class="modal-overlay" (click)="closeReviewModal()">
+      <div class="modal-container review-modal" (click)="$event.stopPropagation()">
+        <i class="fas fa-times close-modal" (click)="closeReviewModal()"></i>
+        <div class="modal-body">
+          <h2 class="mb-4">
+            <i class="fas fa-eye"></i>
+            Review Your Answers
+          </h2>
+          <div class="review-list">
+            <div *ngFor="let question of questions; let i = index" class="review-item">
+              <div class="review-question">
+                <span class="question-number">Q{{ i + 1 }}</span>
+                <p>{{ question.question }}</p>
+              </div>
+              <div class="review-answer">
+                <span class="your-answer" [class.correct]="isAnswerCorrect(question, i)" [class.incorrect]="!isAnswerCorrect(question, i)">
+                  Your Answer: {{ getUserAnswerText(question, i) }}
+                </span>
+                <span *ngIf="!isAnswerCorrect(question, i)" class="correct-answer">
+                  Correct: {{ getAnswerText(question, question.correctAnswer) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

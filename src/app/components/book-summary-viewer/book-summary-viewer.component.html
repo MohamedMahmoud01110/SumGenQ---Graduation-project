@@ -1,0 +1,135 @@
+<section id="viewer">
+  <div class="row mb-5 pb-5 pt-5 p-5">
+    <!-- PDF Viewer -->
+    <!-- <div class="col-md-4 mt-2">
+      <div *ngIf="fileName" class="pdf-container">
+        <iframe #pdfViewer
+                [src]="fileUrl"
+                width="100%"
+                height="800px"
+                style="border: none;"
+                *ngIf="fileUrl">
+        </iframe>
+      </div>
+      <div *ngIf="!fileName" class="no-file-message">
+        <p class="text-muted">No document loaded</p>
+      </div>
+    </div> -->
+    <!-- Summary Viewer -->
+    <div class="col-md-6">
+      <div class="summary_box " *ngIf="summaryResult">
+        <div class="d-flex justify-content-between position-relative summary_head">
+          <h3>📋 Summary</h3>
+          <i class="fa-solid fa-xmark close_summary" (click)="closeSummary()"></i>
+        </div>
+        <div class="text-start summary_document ">
+          <textarea class="form-control p-4" rows="30" readonly>{{ summaryResult.summary }}</textarea>
+        </div>
+        <div class="items_container  rounded-2 rounded-bottom-0">
+            <!-- Word Count for Summarized Text -->
+            <div class="word-count word-count-2 text-main ms-3">
+              <p>{{ wordCountSummarizedText }} word{{ wordCountSummarizedText !== 1 ? 's' : '' }}</p>
+            </div>
+            <button class="btn mt-1 voice"
+              title="{{ isSpeaking ? 'Stop listening' : 'Click to listen' }}"
+              (click)="toggleSpeech()">
+              <i [ngClass]="isSpeaking ? 'fa-solid fa-microphone' : 'fa-solid fa-microphone-slash'" class="voice-icon"></i>
+            </button>
+            <img [src]="copied ? 'images/check-mark.jpg' : 'images/copy.jpg'" class="copy_img" alt="Copy Icon"
+              [title]="copied ? 'Text copied!' : 'Copy Text'"
+              (click)="copyText()">
+            <i class="fa-solid fa-download" (click)="downloadText()" alt="Download Icon" title="Download Text"></i>
+        </div>
+        <div class="d-flex  rounded-2 rounded-top-0 " style="margin-top: -30px; background-color: #8196aa99;">
+            <p class="me-4  mt-1 ms-2" style="font-size: 20px; font-weight: bold;">Voice gender :</p>
+              <div class="dropdown ">
+                <button class="btn bgg-secondary w-100 dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  {{gender}}
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton"  [ngClass]="getTheme() =='dark' ? 'dropdown-menu-dark' : ''">
+                  <li class="dropdown-item" (click)="changeGender('female')" (click)="toggleSpeech()">Female</li>
+                  <li class="dropdown-item"  (click)="changeGender('male')" (click)="toggleSpeech()">Male</li>
+                </div>
+              </div>
+        </div>
+      </div>
+    </div>
+    <!-- Chat bot -->
+    <div class="col-md-6">
+      <!-- Chat Section -->
+      <div class="chat-section position-relative" id="chatSection">
+        <div class="chat-header">
+          <h3><i class="fas fa-comments"></i> Chat with Document</h3>
+        </div>
+
+        <div class="chat-messages" #chatMessagesContainer>
+          <div class="message system">
+            <i class="fas fa-robot"></i>
+            <div class="message-content">
+              <p>Ask me anything about your uploaded document!</p>
+            </div>
+          </div>
+
+          <!-- Dynamic messages -->
+          <div *ngFor="let message of chatMessages"
+              class="message"
+              [ngClass]="message.type">
+            <i *ngIf="message.type === 'system'" class="fas fa-robot"></i>
+            <i *ngIf="message.type === 'user'" class="fas fa-user"></i>
+            <i *ngIf="message.type === 'assistant'" class="fas fa-robot"></i>
+
+            <div class="message-content">
+              <p>{{ message.content }}</p>
+              <small *ngIf="message.timestamp" class="message-time">
+                {{ message.timestamp | date:'shortTime' }}
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input">
+          <input type="text"
+                #questionInput
+                placeholder="Type your question..."
+                [(ngModel)]="currentQuestion"
+                (keypress)="handleQuestionKeyPress($event)">
+          <button (click)="askQuestion()">
+            <i *ngIf="!isLoadingChat" class="fas fa-paper-plane"></i>
+            <i *ngIf="isLoadingChat" class="fas fa-spinner fa-spin"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+      <!-- Empty chat messages -->
+  <div *ngIf="showEmptyTextWarning" class="overlay2 ">
+            <div class="warning_box2 rounded-5 p-4 text-center ">
+              <div class=" bg p-3 rounded-5">
+                <span class="rounded-5 "></span>
+                  <!-- <div class="bg"></div> -->
+                  <img src="images/no_enough_text.svg" alt="" class="">
+              </div>
+              <div class="warning_box_content  text-center rounded-5 p-4">
+                  <i class="fa-solid fa-xmark close" (click)="closeWarning()"></i>
+                  <i class="fa-solid fa-triangle-exclamation fa-2x text-danger mb-3 warning_icon "></i>
+                  <h4 class="fw-bold mb-2">No Question Asked</h4>
+                  <p>Please ask a question before clicking.</p>
+                  <div class="d-flex justify-content-center mt-3">
+                    <button type="button"
+                            class="btn btn1  me-2"
+                            (click)="showEmptyTextWarning = false">
+                      Try Again
+                    </button>
+                    <button type="button"
+                            class="btn btn2 btn-outline-secondary"
+                            (click)="showEmptyTextWarning = false"
+                            routerLink="/home">
+                      Ignore
+                    </button>
+              </div>
+              </div>
+            </div>
+          </div>
+</section>
+
+

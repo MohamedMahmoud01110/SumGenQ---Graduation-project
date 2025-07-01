@@ -1,25 +1,43 @@
 <section id="login" class="">
 
-  <div class="w-50 mx-auto login-form ">
-      <div class="text-center custom__shadow p-5">
-          <h1 class="text-main mb-5">Login Now</h1>
+  <div class="w-50 mx-auto login-form">
+      <div class="text-center custom__shadow p-5 login-form-container">
+          <h1 class="text-main mb-5">Log in Now</h1>
 
-          <form class="my-4">
+          <form class="my-4" [formGroup]="loginForm" (ngSubmit)="submitForm()">
 
-              <input id="loginEmail" class="form-control mb-4" type="email" placeholder="Enter Your Email">
+              <input formControlName="email" type="email" id="loginEmail" class="form-control mb-4" type="email" placeholder="Enter Your Email">
 
-              <input id="loginPassword" class="form-control mb-4" type="password"
-                  placeholder="Enter Your Password">
-
-              <div id="loginErrorMsg" class="d-none text-danger mb-3">
+              <div class="position-relative">
+                <input [type]="showPassword ? 'text' : 'password'" formControlName="password" id="loginPassword" class="form-control mb-4 " placeholder="Enter your password" />
+                <i class="showPass text-black  absolute fa-solid"  [ngClass]="showPassword ? 'fa-eye' : 'fa-eye-slash'" (click)="togglePassword()"></i>
+                <validation-messages [controls]="loginForm.get('password')"></validation-messages>
               </div>
 
-              <button id="btnLogin" class="btn bgg-secondary hh w-100 mb-3">Log In</button>
 
-              <span class="text-main fw-bold">
-                  Don't have an account? <a id="signUpLink"
-                      class="" href="/signUp">Sign
-                      up</a>
+              @if (resMsg) {
+                <div class="p-4 mb-4 alert" [ngClass]="resMsg.includes('success') ? 'alert-success' : 'alert-danger'" role="alert">
+                      {{resMsg}}
+                </div>
+              }
+
+
+
+            <button id="btnLogin"  [disabled]="loginForm.invalid || !isLoading" [class.bg-gray]="loginForm.invalid  || !isLoading" class="btn bgg-secondary hh w-100 mb-3" type="submit">
+              @if (isLoading) {
+                Log In
+              }@else {
+                <div class="d-flex align-items-center text-white justify-content-center">
+                  <div class="spinner-border me-3 text-light" role="status" style="width: 1.5rem; height: 1.5rem;">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  Loading...
+                </div>
+              }
+            </button>
+
+              <span class="text-main fw-bold sp">
+                  Don't have an account? <a class="var(--secondary-color) " routerLink="/signup">Sign up</a>
               </span>
           </form>
       </div>

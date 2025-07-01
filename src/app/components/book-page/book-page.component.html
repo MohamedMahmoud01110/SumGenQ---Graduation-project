@@ -1,35 +1,258 @@
-<section id="book_summarization">
-  <div class="container">
-    <div class="row ">
-      <div class=" d-flex justify-content-center align-items-center mb-5 p-5 ">
-          <div class="col-md-6  text-center p-5 bg-form  mb-2 form_container ">
-              <h3 class="mb-3 text-main">Enter an Article URL or Upload your file</h3>
-              <!-- Tabs -->
-              <div class="btn-group mb-4">
-                  <button class="btn bgg-secondary hh">Upload file</button>
-                  <button class="btn btn-secondary">Add URL</button>
-              </div>
-              <!-- File Upload Box -->
-              <div class="upload-box mb-2">
-                  <p class="text-mian">Select or Drop a file</p>
-                  <p class="text-main">We support .pdf, .doc, .docx files up to 25 MB</p>
-                  <input type="file" (change)="onFileSelected($event)" accept=".pdf" class="form-control mt-3 bg-main text-main">
+<section id="book_summarization" class="">
+  <div class="container pt-3  mt-5  mb-5  ">
+    <div class="row  ">
+      <div class="position-relative" [class.hide]="selectedFile" >
+      <img [src]="theme==='dark'  ? 'images/drag-arrow-dark.jpg' : 'images/drag-arrow-light.jpg'" alt="Large curved arrow pointing toward the file upload area, indicating where to drag and drop documents. The arrow is set against a clean interface designed to guide users. No text is present in the image. The tone is clear and instructional." style="width: 150px; position: absolute; right: 110px; top: -70px;">
+      <img [src]="theme==='dark'  ? 'images/arrow-dark.jpg' : 'images/arrow-light.jpg'"  alt="" style="width: 80px; position: absolute; right:280px; top: -37px;">
 
+      </div>
+
+      <div class="d-flex justify-content-center align-items-center mb-5 p-5 mt-3 ">
+        <div  [ngClass]="{'col-md-8 ': analysisResult === null, 'col-md-12': analysisResult !== null}" class=" text-center p-5 mb-2 form_container rounded-5 ">
+          <div class="upload-section" >
+            <div class="upload-area" id="uploadArea"
+              (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave($event)"
+              (drop)="onDrop($event)"
+              (click)="triggerFileInput()"
+              [class.hide]="selectedFile" >
+              <i class="fas fa-cloud-upload-alt"></i>
+              <h3>Upload Document</h3>
+              <p>Drag & drop or click to select PDF, DOCX, or TXT files</p>
+              <input type="file" id="fileInput" #fileInput accept=".pdf,.docx,.txt" hidden  *ngIf="!selectedFile"
+                (change)="onFileSelected($event)"/>
+              <button class="upload-btn text-main choose_btn"  type="button" (click)="triggerFileInput($event)" >
+                  Choose File
+              </button>
+              <button class="upload-btn text-main url_btn ms-2" type="button" (click)="openUrlModal($event)">
+                  Add URL
+              </button>
+            </div>
+            <!-- Show file name if selected -->
+            <div *ngIf="selectedFile" class=" mt-2 show_file_info file-info rounded-2 w-100 my-2 py-3">
+              <div>
+                  <i class="fa-solid fa-file-alt text-main" style="font-size: 22px; "></i>
+                  <span class= "ms-1 text-black">{{ selectedFile.name }}</span>
+                  <span class="ms-1 text-black" *ngIf="selectedFile.size > 0"> {{formatFileSize(selectedFile.size)}}</span>
+                  <span class="ms-1 text-black" *ngIf="fileUploadService.getInputUrl()"> (URL: {{ fileUploadService.getInputUrl() }})</span>
               </div>
-              <!-- Check Box and microphone -->
-              <div class="d-flex justify-content-between">
-                <div class="checkboxs  mb-4 float-start">
-                  <div class="exam-check">
-                      <input type="checkbox" id="myCheckbox" >
-                      <label for="myCheckbox" class="text-main mx-2">Exam Bot</label>
+              <button class="btn btn-sm btn-outline-danger ms-2" (click)="removeFile()" (click)=" closeAnalysis()">Remove</button>
+            </div>
+          </div>
+          <!-- Summarize Button -->
+          <div class=" d-flex justify-content-evenly ">
+              <button class="btn btn-upload  mx-4  " [ngClass]="{'summarize_btn': analysisResult === null, '': analysisResult !== null}" (click)="summarizeBook()">
+
+                @if(!isLoadingSumamry){
+                  Summarize
+                }
+                @else if(isLoadingSumamry ){
+                  <div class="d-flex align-items-center  justify-content-center spnr">
+                    <div class="spinner-border me-3  " role="status" style="width: 1.5rem; height: 1.5rem;">
+                      <span class="visually-hidden">Loading...</span>
+                    </div>
+                    Loading...
                   </div>
+                }
+              </button>
+
+              <button class="btn btn-upload   mx-4 analyze_btn" (click)="analyzeDocument()" *ngIf="!fileUploadService.getInputUrl()">
+                @if(!isLoadingAnalysis){
+                  Analyze Document
+                }
+                @else if(isLoadingAnalysis ){
+                  <div class="d-flex align-items-center  justify-content-center spnr">
+                    <div class="spinner-border me-3  " role="status" style="width: 1.5rem; height: 1.5rem;">
+                      <span class="visually-hidden">Loading...</span>
+                    </div>
+                    Loading...
+                  </div>
+                }
+              </button>
+          </div>
+
+          <!-- No uploaded file warning-->
+          <div *ngIf="showNoFileWarning" class="overlay2 ">
+            <div class="warning_box2 rounded-5 p-4 text-center ">
+              <div class=" bg p-3 rounded-5">
+                <span class="rounded-5 "></span>
+                  <!-- <div class="bg"></div> -->
+                  <img src="images/no_enough_text.svg" alt="" class="">
+              </div>
+              <div class="warning_box_content  text-center rounded-5 p-4">
+                  <i class="fa-solid fa-xmark close" (click)="closeWarning()"></i>
+                  <i class="fa-solid fa-triangle-exclamation fa-2x text-danger mb-3 warning_icon "></i>
+                  <h4 class="fw-bold mb-2">No File Uploaded</h4>
+                  <p>Please upload or drop a document before clicking summarize.</p>
+                  <div class="d-flex justify-content-center mt-3">
+                    <button type="button"
+                            class="btn btn1  me-2"
+                            (click)="showNoFileWarning = false">
+                      Try Again
+                    </button>
+                    <button type="button"
+                            class="btn btn2 btn-outline-secondary"
+                            (click)="showNoFileWarning = false"
+                            routerLink="/home">
+                      Ignore
+                    </button>
+              </div>
+              </div>
+            </div>
+          </div>
+          <!-- unsupported file type warning-->
+          <div *ngIf="showUnsupportedFileWarning" class="overlay2 ">
+            <div class="warning_box2 rounded-5 p-4 text-center ">
+              <div class=" bg p-3 rounded-5">
+                <span class="rounded-5 "></span>
+                  <!-- <div class="bg"></div> -->
+                  <img src="images/no_enough_text.svg" alt="" class="">
+              </div>
+              <div class="warning_box_content  text-center rounded-5 p-4">
+                  <i class="fa-solid fa-xmark close" (click)="closeWarning()"></i>
+                  <i class="fa-solid fa-triangle-exclamation fa-2x text-danger mb-3 warning_icon "></i>
+                  <h4 class="fw-bold mb-2">Unsupported File Type</h4>
+                  <p>Please upload a PDF or Word document (.doc, .docx) only.</p>
+                  <div class="d-flex justify-content-center mt-3">
+                    <button type="button"
+                            class="btn btn1  me-2"
+                            (click)="showUnsupportedFileWarning = false">
+                      Try Again
+                    </button>
+                    <button type="button"
+                            class="btn btn2 btn-outline-secondary"
+                            (click)="showUnsupportedFileWarning = false"
+                            routerLink="/home">
+                      Ignore
+                    </button>
+              </div>
+              </div>
+            </div>
+          </div>
+          <!-- URL Input Modal -->
+          <div *ngIf="showUrlModal" class="overlay2">
+            <div class="warning_box2 warning-url rounded-5 p-4 text-center">
+              <div class="bg p-3 rounded-5">
+                <span class="rounded-5"></span>
+                <img src="images/url-2.png" alt="" class="pt-3">
+              </div>
+              <div class="warning_box_content text-center rounded-5 p-4">
+                <i class="fa-solid fa-xmark close close-url " (click)="closeUrlModal()"></i>
+                <i class="fa-solid fa-link fa-2x text-main mb-3 url_icon"></i>
+                <h4 class="fw-bold mb-2">Add URL</h4>
+                <p>Enter the URL of the document you want to summarize</p>
+                <div class="url-input-container mb-3">
+                  <input
+                    type="url"
+                    class="form-control url-input"
+                    placeholder="https://example.com"
+                    [(ngModel)]="urlInput"
+                    (keyup.enter)="processUrl()"
+                  >
+                </div>
+                <div class="d-flex justify-content-center mt-3">
+                  <button type="button"
+                          class="btn btn1 me-2"
+                          (click)="processUrl()"
+                          [disabled]="!urlInput || isLoadingUrl">
+                    @if(!isLoadingUrl){
+                      Process URL
+                    }
+                    @else{
+                      <div class="d-flex align-items-center justify-content-center">
+                        <div class="spinner-border me-2" role="status" style="width: 1rem; height: 1rem;">
+                          <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Processing...
+                      </div>
+                    }
+                  </button>
+                  <button type="button"
+                          class="btn btn2 btn-outline-secondary"
+                          (click)="closeUrlModal()">
+                    Cancel
+                  </button>
                 </div>
               </div>
-              <!-- Summarize Button -->
-              <button class="btn btn-upload text-main w-100">SUMMARIZE THIS</button>
+            </div>
           </div>
+          <!-- Output -->
+          <div *ngIf="summarizedText" class="mt-4">
+            <h5 class="text-main">Summary:</h5>
+            <textarea class="form-control" rows="10" readonly>{{ summarizedText }}</textarea>
+          </div>
+          <!-- analyze document -->
+          <div class="mt-5 analysis_box" *ngIf="analysisResult" >
+            <div class="d-flex justify-content-between  position-relative analysis_head">
+              <h3 class="ms-3">Document Summary</h3>
+              <i class="fa-solid fa-xmark close_analysis" (click)="closeAnalysis()"></i>
+            </div>
+            <div  class="mt-0 text-start analysis_document p-4">
+              <h4 >📊 Document Information</h4>
+              <div class="metadata-grid">
+                <div class="metadata-item">
+                  <h5>File Name</h5>
+                  <p>
+                    <ng-container *ngIf="selectedFile && selectedFile.name && selectedFile.name.length > 12; else shortName">
+                      {{ selectedFile && selectedFile.name ? selectedFile.name.slice(0, 14) : '' }}<br>{{ selectedFile && selectedFile.name ? selectedFile.name.slice(14) : '' }}
+                    </ng-container>
+                    <ng-template #shortName>
+                      {{ selectedFile?.name }}
+                    </ng-template>
+                  </p>
+                </div>
+              <div class="metadata-item">
+                <h5>File Size</h5>
+                <p>{{ formatFileSize(selectedFile?.size ?? 0) }}</p>
+              </div>
+              <div class="metadata-item">
+                <h5>File Type</h5>
+                <p>{{ analysisResult.analysis.file_metadata?.file_type?.toUpperCase() || analysisResult.analysis.url_metadata?.file_type?.toUpperCase() || 'URL' }}</p>
+              </div>
+              <div class="metadata-item">
+                <h5>Word Count</h5>
+                <p>{{ analysisResult.analysis.document_metadata.word_count | number }}</p>
+              </div>
+              <div class="metadata-item">
+                <h5>Characters</h5>
+                <p>{{ analysisResult.analysis.document_metadata.character_count | number }}</p>
+              </div>
+              <div class="metadata-item">
+                <h5>Sentences</h5>
+                <p>{{ analysisResult.analysis.document_metadata.sentence_count }}</p>
+              </div>
+              <div class="metadata-item">
+                <h5>Reading Time</h5>
+                <p>~{{ analysisResult.analysis.document_metadata.estimated_reading_time_minutes }} Sec</p>
+              </div>
+              <div class="metadata-item">
+                <h5>Chunks Needed</h5>
+                <p>{{ analysisResult.analysis.document_metadata.chunks_needed }}</p>
+              </div>
+            </div>
+            <h4>💡 Processing Recommendations</h4>
+            <div class="metadata-grid">
+              <div class="metadata-item">
+                <h5>Complexity</h5>
+                <p>{{ analysisResult.analysis.processing_recommendations.complexity }}</p>
+              </div>
+              <div class="metadata-item">
+                <h5>Chunking</h5>
+                <p>{{ analysisResult.analysis.processing_recommendations.chunking }}</p>
+              </div>
+              <div class="metadata-item">
+                <h5>Time Estimate</h5>
+                <p>{{ analysisResult.analysis.processing_recommendations.time_estimate }}</p>
+              </div>
+            </div>
+            <h4>📝 Text Preview</h4>
+            <textarea rows="12" cols="140" class="analyze_text_area" >
+              {{ analysisResult.analysis.text_preview }}
+            </textarea>
+          </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
-
 </section>

@@ -1,14 +1,14 @@
 <section id="navbar">
   <nav class="navbar navbar-expand-lg bg-main my-0">
-    <div class="container-fluid ">
+    <div class="container-fluid">
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
         <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path stroke="#00ADB5" stroke-width="3" stroke-linecap="round" stroke-miterlimit="10" d="M4 7h22M4 15h22M4 23h22"/>
         </svg>
       </button>
-      <a href="" class="w-115 ms-5 logo"><img [src]="isDarkMode===true ? 'images/logo.png' : 'images/logo_black.png' " class="w-100" height="110px" alt="logo"></a>
+      <a routerLink="/home" class="w-115 ms-5 logo"><img [src]="theme==='dark' ? 'images/logo.png' : 'images/logo_black.png' " class="w-100" height="110px" alt="logo"></a>
       <a class="btn  ms-2 theme_btn" (click)="toggleTheme()">
-        <i class="bi " [ngClass]="isDarkMode ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
+        <i class="bi " [ngClass]="theme==='dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
       </a>
       <div class="collapse navbar-collapse " id="navbarSupportedContent">
         <ul class="navbar-nav me-auto  mb-2 mb-lg-0 d-flex justify-content-between w-75 pb-4 mt-2 f_ul">
@@ -17,20 +17,94 @@
               <a class="nav-link active fw-bold" aria-current="page" routerLink="/home" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Home</a>
             </li>
             <li class="nav-item mx-2">
-              <a class="nav-link fw-bold" routerLink="/text" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Text Summarization</a>
+              <a class="nav-link fw-bold" routerLink="/text" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Text Summ</a>
             </li>
             <li class="nav-item mx-2">
-              <a class="nav-link fw-bold" routerLink="/book" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Book Summarization</a>
+              <a class="nav-link fw-bold" routerLink="/book" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Book Summ & Chat</a>
             </li>
+            <li class="nav-item mx-2">
+              <a class="nav-link fw-bold" routerLink="/quiz" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">QuizGen</a>
+            </li>
+            <!-- <li class="nav-item mx-2">
+              <a class="nav-link fw-bold" routerLink="/history" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">History</a>
+            </li> -->
             <li class="nav-item mx-2">
               <a class="nav-link fw-bold" routerLink="/about" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">About Us</a>
             </li>
           </div>
         </ul>
-        <ul class="navbar-nav me-auto mb-lg-0 d-flex pb-4 mt-2 ms-sm-2 res2">
-          <li><a class="nav-link fw-bold me-3" routerLink="/signup" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Sign up</a></li>
-          <li><a class="nav-link fw-bold" routerLink="/login" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Log in</a></li>
-        </ul>
+        @if(layout === 'auth'){
+          <ul class="navbar-nav me-auto mb-lg-0 d-flex pb-4 mt-2 ms-sm-2 res2">
+            <li><a class="nav-link fw-bold me-3" routerLink="/signup" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Sign up</a></li>
+            <li><a class="nav-link fw-bold" routerLink="/login" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Log in</a></li>
+          </ul>
+        }
+        <!-- @else {
+          <ul class="navbar-nav ">
+            <li><a (click)="logOut()"  class="nav-link fw-bold me-3 pb-4 " routerLink="/login" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Log out</a></li>
+          </ul>
+        } -->
+        @else {
+
+  <!-- <ul class="navbar-nav drop-M d-flex align-items-center">
+    <li class="nav-item dropdown me-5">
+      <a class="nav-link dropdown-toggle p-0" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <img src="images/e.png" alt="Profile" class="rounded-circle profile" width="40" height="40" style="object-fit: cover;">
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end " [ngClass]="theme==='dark' ? 'dropdown-menu-dark' : ''">
+        <li><a class="dropdown-item" routerLink="/profile">Profile</a></li>
+        <li><a data-bs-toggle="dropdown" class="dropdown-item" routerLink="/settings">Settings</a></li>
+        <li><a data-bs-toggle="dropdown" class="dropdown-item" routerLink="/history">History</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a data-bs-toggle="dropdown" class="dropdown-item text-danger" (click)="logOut()" routerLink="/login">Log out</a></li>
+      </ul>
+
+    </li>
+  </ul> -->
+  <ul class="navbar-nav drop-M d-flex align-items-center">
+    <!-- Profile Image Dropdown -->
+    <li class="nav-item dropdown me-5">
+      <a
+        class="nav-link dropdown-toggle p-0"
+        href="#"
+        role="button"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+      >
+        <img
+          src="images/e.png"
+          alt="Profile"
+          class="rounded-circle profile"
+          width="40"
+          height="40"
+          style="object-fit: cover;"
+        />
+      </a>
+      <ul
+        class="dropdown-menu dropdown-menu-end"
+        [ngClass]="theme === 'dark' ? 'dropdown-menu-dark' : ''"
+      >
+        <li><a class="dropdown-item" routerLink="/profile">Profile</a></li>
+        <li><a class="dropdown-item" routerLink="/settings">Settings</a></li>
+        <li><a class="dropdown-item" routerLink="/history">History</a></li>
+        <li><hr class="dropdown-divider" /></li>
+        <li>
+          <a
+            class="dropdown-item text-danger"
+            (click)="logOut()"
+            routerLink="/login"
+          >
+            Log out
+          </a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+
+  <ul class="navbar-nav ">
+            <li><a (click)="logOut()"  class="nav-link fw-bold me-3 pb-4 " routerLink="/login" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Log out</a></li>
+          </ul>
+}
       </div>
     </div>
   </nav>

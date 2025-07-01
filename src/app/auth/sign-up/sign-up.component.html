@@ -1,42 +1,139 @@
 <section id="signUp" class="">
-
   <div class="w-50 mx-auto mt-5 signUp-form-container ">
       <div class="custom__shadow p-5 signUp-form">
-          <h1 class="text-center text-main mb-5">Sign Up Now</h1>
+          <h1 class="text-center text-main mb-5">Sign up Now</h1>
 
-          <form class="mt-4">
-
+          <!-- Registration Form -->
+          <form [formGroup]="registerForm" (ngSubmit)="submitForm()" class="mt-4" *ngIf="!showOTPForm">
               <div class="mb-3">
-                  <input id="signUpName" class="form-control" type="text" placeholder="Enter Your Name">
-                  <span id="nameVal" class="d-none text-danger">
-                  </span>
+                  <input  formControlName="name" id="signUpName" class="form-control" type="text" id="name" placeholder="Enter Your Name">
+                  <validation-messages [controls]="registerForm.get('name')"></validation-messages>
               </div>
 
               <div class="mb-3">
-                  <input id="signUpEmail" class="form-control" type="email" placeholder="Enter Your Email">
-                  <span id="emailVal" class="d-none text-danger">
-                      Invalid email.
-                  </span>
+                  <input formControlName="email" id="signUpEmail" class="form-control" type="email" placeholder="Enter Your Email">
+                  <validation-messages [controls]="registerForm.get('email')"></validation-messages>
               </div>
 
-              <div class="mb-3">
-                  <input id="signUpPassword" class="form-control" type="password"
-                      placeholder="Enter Your Password">
-                  <span id="passwordVal" class="d-none text-danger"></span>
+              <div class="mb-3 position-relative">
+                  <input [type]="showPassword ? 'text' : 'password'" formControlName="password" id="signUpPassword" class="form-control" type="password" placeholder="Enter Your Password">
+                  <i class="showPass text-black absolute fa-solid"  [ngClass]="showPassword ? 'fa-eye' : 'fa-eye-slash'" (click)="togglePassword()"></i>
+                  <validation-messages [controls]="registerForm.get('password')"></validation-messages>
               </div>
-
-              <div id="signUpErrorMsg" class="d-none text-danger text-center mb-3"></div>
-
-              <button id="btnSignUp" class="btn bgg-secondary hh w-100 mb-3">Sign Up</button>
+              <div class="mb-3 position-relative">
+                  <input [type]="showPassword2 ? 'text' : 'password'" formControlName="rePassword" id="signUpRePassword" class="form-control" type="password" placeholder="Enter Your rePassword">
+                  <i class="showPass text-black absolute fa-solid"  [ngClass]="showPassword2 ? 'fa-eye' : 'fa-eye-slash'" (click)="togglePassword2()"></i>
+                  <validation-messages [controls]="registerForm"></validation-messages>
+              </div>
+              @if (resMsg) {
+                <div class="p-4 mb-4 alert" [ngClass]="resMsg.includes('success') ? 'alert-success' : 'alert-danger'" role="alert">
+                  {{resMsg}}
+                </div>
+              }
+              <button id="btnSignUp" [disabled]="registerForm.invalid || !isLoading" [class.bg-gray]="registerForm.invalid  || !isLoading" type="submit" class="btn bgg-secondary hh w-100 mb-3">
+                @if (isLoading) {
+                  Sign Up
+                }@else {
+                  <div class="d-flex align-items-center text-white justify-content-center">
+                    <div class="spinner-border me-3 text-light" role="status" style="width: 1.5rem; height: 1.5rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    Loading...
+                  </div>
+                }
+              </button>
           </form>
 
-          <div class="text-center text-main fw-bold sp">
-              Do You have an account? <a id="loginLink"
-                  class="" href="/logIn">Log
-                  In</a>
+          <!-- OTP Verification Form -->
+          <div *ngIf="showOTPForm" class="otp-verification-section">
+              <div class="text-center mb-4">
+                  <h3 class="text-main">Verify Your Email</h3>
+                  <p class="text-muted">We've sent a 6-digit code to your email</p>
+                  <p class="text-muted small">{{ registerForm.value.email }}</p>
+              </div>
+
+              <form [formGroup]="otpForm" (ngSubmit)="verifyOTP()" class="mt-4">
+                  <div class="mb-3">
+                      <input
+                          formControlName="otp"
+                          id="otpInput"
+                          class="form-control text-center"
+                          type="text"
+                          placeholder="Enter 6-digit OTP"
+                          maxlength="6"
+                          pattern="[0-9]*"
+                          style="font-size: 1.2rem; letter-spacing: 0.5rem;"
+                      >
+                      <validation-messages [controls]="otpForm.get('otp')"></validation-messages>
+                  </div>
+
+                  <!-- Retry Counter Display -->
+                  <div *ngIf="otpRetryCount > 0" class="mb-3">
+                      <div class="alert alert-warning "  role="alert">
+                          <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                          Attempt {{ otpRetryCount }} of {{ maxOtpRetries }}
+                          @if (otpRetryCount >= maxOtpRetries) {
+                            <br><small>Maximum attempts reached. Please resend OTP.</small>
+                          }
+                      </div>
+                  </div>
+
+                  @if (resMsg) {
+                    <div class="p-4 mb-4 alert" [ngClass]="resMsg.includes('success') ? 'alert-success' : 'alert-danger'" role="alert">
+                      <i class="fas invalid_icon mt-3 me-2" [ngClass]="resMsg.includes('success') ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
+                      {{resMsg}}
+                    </div>
+                  }
+
+                  <button
+                      type="submit"
+                      [disabled]="otpForm.invalid || !isLoading || otpRetryCount >= maxOtpRetries"
+                      [class.bg-gray]="otpForm.invalid || !isLoading || otpRetryCount >= maxOtpRetries"
+                      class="btn bgg-secondary hh w-100 mb-3"
+                  >
+                    @if (isLoading) {
+                      Verify OTP
+                    }@else {
+                      <div class="d-flex align-items-center text-white justify-content-center">
+                        <div class="spinner-border me-3 text-light" role="status" style="width: 1.5rem; height: 1.5rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Verifying...
+                      </div>
+                    }
+                  </button>
+
+                  <button
+                      type="button"
+                      (click)="resendOTP()"
+                      [disabled]="!isLoading || !canResendOTP"
+                      class="btn btn-outline-secondary w-100 mb-3"
+                  >
+                    @if (canResendOTP) {
+                      <i class="fas fa-redo me-2"></i>
+                      Resend OTP
+                    }@else {
+                      <i class="fas fa-clock me-2"></i>
+                      Resend OTP in {{ resendCountdown }}s
+                    }
+                  </button>
+
+                  <button
+                      type="button"
+                      (click)="backToRegister()"
+                      class="btn btn-link w-100  text-decoration-none"
+                      style="color: var(--secondary-color);"
+                  >
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Registration
+                  </button>
+              </form>
           </div>
 
+          <!-- Login Link (only show during registration) -->
+          <div class="text-center text-main fw-bold sp" *ngIf="!showOTPForm">
+              Already have an account? <a class="var(--secondary-color)" routerLink="/login">Log In</a>
+          </div>
       </div>
   </div>
-
 </section>

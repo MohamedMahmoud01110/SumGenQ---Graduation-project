@@ -1,7 +1,7 @@
-
-
 .custom__shadow {
-  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.8);
+  /* box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.8); */
+  box-shadow: #00ADB5 0px 0px 20px 0px;
+
 }
 
 
@@ -26,17 +26,24 @@ input:focus {
 
 }
 .sp{
-
     font-size: 20px;
-
+}
+.sp a{
+  text-decoration: none;
 }
 .signUp-form{
   margin-top: 120px;
+  border-radius: 30px;
 }
 #signUp{
   margin-bottom: 220px;
 }
-
+i{
+  cursor: pointer;
+  position: absolute;
+  top: 11px;
+  right: 15px;
+}
 a{
   color: var(--secondary-color);
   text-decoration: none;
@@ -44,6 +51,86 @@ a{
 a:hover{
   color: var(--hover-color);
   text-decoration: underline;
+}
+.bg-gray{
+  background-color: #536b78;
+}
+
+/* OTP Verification Styles */
+.otp-verification-section {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.otp-verification-section h3 {
+  color: var(--secondary-color);
+  font-weight: 600;
+}
+
+.otp-verification-section .text-muted {
+  color: #6c757d !important;
+}
+
+.otp-verification-section .small {
+  font-size: 0.875rem;
+  background-color: #f8f9fa;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid #dee2e6;
+}
+
+#otpInput {
+  font-weight: 600;
+  background-color: #f8f9fa;
+  border: 2px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+#otpInput:focus {
+  background-color: #fff;
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 0.2rem rgba(0, 173, 181, 0.25);
+}
+
+#otpInput:disabled {
+  background-color: #e9ecef;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  border-color: #ffeaa7;
+  color: #856404;
+}
+
+.alert-warning i {
+  color: #f39c12;
+  font-size: 22px;
+}
+.invalid_icon{
+  font-size: 22px !important;
+
+}
+.btn-outline-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-outline-secondary:not(:disabled):hover {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: white;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media all and (max-width: 768px) {

@@ -1,0 +1,484 @@
+<div class="history-container rounded-2 mb-4">
+  <!-- Header Section -->
+  <div class="history-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        Summary History
+      </h1>
+      <p class="page-subtitle" [ngStyle]="{'color': theme === 'dark' ? '#000' : '#fff'}">
+        View and manage your text and book summaries
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p class="">Loading your summaries...</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading && !error" class="history-content">
+    <!-- Search and Filter Section -->
+    <div class="search-section">
+      <div class="search-container">
+        <div class="search-input-wrapper">
+          <i class="fas fa-search search-icon"></i>
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="applySearch()"
+            placeholder="Search summaries by text, content, or topic..."
+            class="search-input"
+          >
+          <button
+            *ngIf="searchTerm"
+            (click)="clearSearch()"
+            class="clear-search-btn"
+            title="Clear search"
+          >
+            <i class="fas fa-times c-secondary"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'text'"
+        (click)="setActiveTab('text')"
+      >
+        <i class="fas fa-file-alt"></i>
+        Text Summaries
+        <span class="tab-count">{{ filteredTextSummaries.length }}</span>
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'book'"
+        (click)="setActiveTab('book')"
+      >
+        <i class="fas fa-book"></i>
+        Book Summaries
+        <span class="tab-count">{{ filteredBookSummaries.length }}</span>
+      </button>
+    </div>
+
+    <!-- Delete All Button -->
+    <div class="delete-all-section" *ngIf="getSummaryCount() > 0">
+      <button
+        class="delete-all-btn btn  btn-outline-danger"
+        (click)="confirmDeleteAll()"
+        title="Delete all summaries"
+      >
+        <i class="fas fa-trash-alt"></i>
+        Delete All {{ activeTab === 'text' ? 'Text' : 'Book' }} Summaries
+      </button>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-section">
+      <!-- Text Summaries Tab -->
+      <div *ngIf="activeTab === 'text'" class="tab-content ">
+        <div *ngIf="filteredTextSummaries.length === 0" class="empty-state">
+          <div class="empty-icon">
+            <i class="fas fa-file-alt"></i>
+          </div>
+          <h3>No text summaries found</h3>
+          <p *ngIf="searchTerm">Try adjusting your search terms</p>
+          <p *ngIf="!searchTerm">Start by creating your first text summary</p>
+          <button class="create-btn" routerLink="/text">
+            <i class="fas fa-plus"></i>
+            Create Text Summary
+          </button>
+        </div>
+
+        <div *ngIf="filteredTextSummaries.length > 0" class="summaries-grid">
+          <div
+            *ngFor="let summary of filteredTextSummaries; let i = index"
+            class="summary-card"
+            [class.expanded]="isExpanded(summary.id)"
+          >
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fas fa-file-alt card-icon"></i>
+                <h3>
+                  <!-- Show Topic if exists, sliced to 13 chars, add '..' if longer -->
+                  <ng-container *ngIf="summary.Topic; else showText">
+                    {{ summary.Topic.length > 13 ? (summary.Topic | slice:0:13) + '..' : summary.Topic }}
+                  </ng-container>
+                  <ng-template #showText>
+                    <!-- Otherwise show Text, sliced to 40 chars, add '...' if longer -->
+                    {{ summary.Text ? (summary.Text.length > 40 ? (summary.Text | slice:0:40) + '...' : summary.Text) : 'Untitled Summary' }}
+                  </ng-template>
+                </h3>
+                <!-- <span class="summary-number">#{{ summary.id }}</span> -->
+              </div>
+              <div class="card-actions">
+                <button
+                  class="action-btn copy-btn"
+                  (click)="copyToClipboard(summary.Summary, summary.id)"
+                  [title]="copiedSummaryIds.has(summary.id) ? 'Sumamry copied!' : 'Copy Summary'"
+                >
+                  <i class="fas" [class.fa-copy]="!copiedSummaryIds.has(summary.id)" [class.fa-check]="copiedSummaryIds.has(summary.id)"></i>
+                </button>
+                <button
+                    class="action-btn expand-btn"
+                    (click)="openTextExpandModal(summary)"
+                    title="Expand"
+                  >
+                    <i class="fas fa-expand-alt"></i>
+                  </button>
+                <button
+                  class="action-btn chat-btn"
+                  (click)="openChatModal(summary, 'text')"
+                  title="Chat about this summary"
+                >
+                  <i class="fas fa-comments"></i>
+                </button>
+                <button
+                  class="action-btn delete-btn"
+                  (click)="confirmDelete(summary.id)"
+                  [disabled]="isDeleting(summary.id)"
+                  [title]="isDeleting(summary.id) ? 'Deleting...' : 'Delete summary'"
+                >
+                  <i class="fas" [class.fa-trash]="!isDeleting(summary.id)" [class.fa-spinner]="isDeleting(summary.id)"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="card-content">
+              <div class="summary-section">
+                <h4>Original Text</h4>
+                <p class="original-text">
+                  {{ isExpanded(summary.id) ? summary.Text : truncateText(summary.Text, 100) }}
+                </p>
+              </div>
+
+              <div class="summary-section">
+                <h4>Summary</h4>
+                <p class="summary-text">
+                  {{ isExpanded(summary.id) ? summary.Summary : truncateText(summary.Summary, 150) }}
+                </p>
+              </div>
+
+              <div class="card-footer">
+
+                <span class="date">
+                  <i class="fas fa-calendar-alt"></i>
+                  {{ formatDate(summary.created_at) }}
+                </span>
+                <span class="id">#{{ summary.id }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Book Summaries Tab -->
+      <div *ngIf="activeTab === 'book'" class="tab-content">
+        <div *ngIf="filteredBookSummaries.length === 0" class="empty-state">
+          <div class="empty-icon">
+            <i class="fas fa-book"></i>
+          </div>
+          <h3>No book summaries found</h3>
+          <p *ngIf="searchTerm">Try adjusting your search terms</p>
+          <p *ngIf="!searchTerm">Start by creating your first book summary</p>
+          <button class="create-btn" routerLink="/book">
+            <i class="fas fa-plus"></i>
+            Create Book Summary
+          </button>
+        </div>
+
+        <div *ngIf="filteredBookSummaries.length > 0" class="summaries-grid">
+          <div
+            *ngFor="let summary of filteredBookSummaries; let i = index"
+            class="summary-card book-card"
+            [class.expanded]="isExpanded(summary.id)"
+          >
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fas fa-book card-icon"></i>
+                <h3>
+                  {{ summary.Book && summary.Book.length > 15
+                      ? (summary.Book | slice:0:13) + '..'
+                      : (summary.Book || 'Untitled Book')
+                  }}
+                </h3>
+                <!-- <span class="summary-number">#{{ summary.id }}</span> -->
+              </div>
+              <div class="card-actions">
+                <button
+                  class="action-btn copy-btn"
+                  (click)="copyToClipboard(summary.Summary, summary.id)"
+                  [title]="copiedSummaryIds.has(summary.id) ? 'Text copied!' : 'Copy Text'"
+                >
+                  <i class="fas" [class.fa-copy]="!copiedSummaryIds.has(summary.id)" [class.fa-check]="copiedSummaryIds.has(summary.id)"></i>
+                </button>
+                <button
+                  class="action-btn expand-btn"
+                  (click)="openBookExpandModal(summary)"
+                  title="Expand"
+                >
+                  <i class="fas fa-expand-alt"></i>
+                </button>
+                <button
+                  class="action-btn chat-btn"
+                  (click)="openChatModal(summary, 'book')"
+                  title="Chat about this book summary"
+                >
+                  <i class="fas fa-comments"></i>
+                </button>
+                <button
+                  class="action-btn delete-btn"
+                  (click)="confirmDelete(summary.id)"
+                  [disabled]="isDeleting(summary.id)"
+                  [title]="isDeleting(summary.id) ? 'Deleting...' : 'Delete summary'"
+                >
+                  <i class="fas" [class.fa-trash]="!isDeleting(summary.id)" [class.fa-spinner]="isDeleting(summary.id)"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="card-content">
+              <div class="summary-section" *ngIf="summary.Topic">
+                <h4>Topic</h4>
+                <p class="topic-text">{{ summary.Topic }}</p>
+              </div>
+
+              <div class="summary-section">
+                <h4>Summary</h4>
+                <p class="summary-text">
+                  {{ isExpanded(summary.id) ? summary.Summary : truncateText(summary.Summary, 200) }}
+                </p>
+              </div>
+
+              <div class="card-footer">
+                <span class="date">
+                  <i class="fas fa-calendar-alt"></i>
+                  {{ formatDate(summary.created_at) }}
+                </span>
+                <span class="id">#{{ summary.id }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expand Text Modal -->
+      <div class="modal-overlay" *ngIf="showTextExpandModal">
+        <div class="modal-container">
+          <span class="id ">#{{ expandedTextSummary?.id }}</span>
+          <i class="fas fa-times close-modal"  (click)="closeTextExpandModal()"></i>
+          <div class="modal-body">
+            <h2 class="mb-4">Original Text
+              <button class="action-btn copy-btn-modal ms-2" (click)="copyExpandTextModal('text')" [title]="copiedExpandTextSummary === 'text' ? 'Text copied!' : 'Copy Text'">
+                <i class="fas" [class.fa-copy]="copiedExpandTextSummary !== 'text'" [class.fa-check]="copiedExpandTextSummary === 'text'"></i>
+              </button>
+              <button class="action-btn chat-btn-modal ms-2" (click)="expandedTextSummary && openChatModal(expandedTextSummary, 'text')" title="Chat about this summary">
+                <i class="fas fa-comments"></i>
+              </button>
+            </h2>
+            <textarea class="p-3 px-4" name="" id="" cols="100" rows="25">{{ expandedTextSummary?.Text }}</textarea>
+            <h2 class="mb-4">Summary
+              <button class="action-btn copy-btn-modal ms-2" (click)="copyExpandTextModal('summary')" [title]="copiedExpandTextSummary === 'summary' ? 'Summary copied!' : 'Copy Summary'">
+                <i class="fas" [class.fa-copy]="copiedExpandTextSummary !== 'summary'" [class.fa-check]="copiedExpandTextSummary === 'summary'"></i>
+              </button>
+            </h2>
+            <textarea class="p-3 px-4" name="" id="" cols="100" rows="25">{{ expandedTextSummary?.Summary }}</textarea>
+            <div class="modal-footer">
+              <!-- Buttons moved to headers -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expand Book Modal -->
+      <div class="modal-overlay" *ngIf="showBookExpandModal">
+        <div class="modal-container">
+          <span class="id ">#{{ expandedBookSummary?.id }}</span>
+          <i class="fas fa-times close-modal"  (click)="closeBookExpandModal()"></i>
+          <div class="modal-body">
+            <h2 class="mb-4">Book
+              <button class="action-btn copy-btn-modal ms-2" (click)="copyExpandBookModal('text')" [title]="copiedExpandBookSummary === 'text' ? 'Book copied!' : 'Copy Book'">
+                <i class="fas" [class.fa-copy]="copiedExpandBookSummary !== 'text'" [class.fa-check]="copiedExpandBookSummary === 'text'"></i>
+              </button>
+              <button class="action-btn chat-btn-modal ms-2" (click)="expandedBookSummary && openChatModal(expandedBookSummary, 'book')" title="Chat about this book summary">
+                <i class="fas fa-comments"></i>
+              </button>
+            </h2>
+            <textarea class="p-3 px-4" name="" id="" cols="100" rows="3">{{ expandedBookSummary?.Book }}</textarea>
+            <ng-container *ngIf="expandedBookSummary?.Topic">
+              <h2 class="mb-4">Topic</h2>
+              <textarea class="p-3 px-4" name="" id="" cols="100" rows="3">{{ expandedBookSummary?.Topic }}</textarea>
+            </ng-container>
+            <h2 class="mb-4">Summary
+              <button class="action-btn copy-btn-modal ms-2" (click)="copyExpandBookModal('summary')" [title]="copiedExpandBookSummary === 'summary' ? 'Summary copied!' : 'Copy Summary'">
+                <i class="fas" [class.fa-copy]="copiedExpandBookSummary !== 'summary'" [class.fa-check]="copiedExpandBookSummary === 'summary'"></i>
+              </button>
+            </h2>
+            <textarea class="p-3 px-4" name="" id="" cols="100" rows="25">{{ expandedBookSummary?.Summary }}</textarea>
+            <div class="modal-footer">
+              <!-- Buttons moved to headers -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div *ngIf="showDeleteConfirm" class="overlay2 ">
+  <!-- <img src="images/no_enough_text.svg" alt="" class=""> -->
+  <div class="warning_box2 rounded-5 p-4 text-center ">
+    <div class=" bg p-3 rounded-5">
+      <span class="rounded-5 "></span>
+        <!-- <div class="bg"></div> -->
+        <img src="images/no_enough_text.svg" alt="" class="">
+    </div>
+    <div class="warning_box_content  text-center rounded-5 p-4">
+        <i class="fa-solid fa-xmark close"  (click)="closeWarning()" ></i>
+        <i class="fa-solid fa-triangle-exclamation fa-2x text-danger mb-3 warning_icon "></i>
+        <h4 class="fw-bold mb-2">Confirm Deletion</h4>
+        <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+        <div class="d-flex justify-content-center mt-3">
+          <button type="button"
+                  class="btn btn1  me-2"
+                  (click)="showDeleteConfirm = false" (click)="deleteItem()">
+            Confirm
+          </button>
+          <button type="button"
+                  class="btn btn2 btn-outline-secondary"
+                  (click)="showDeleteConfirm = false "
+                  (click)="cancelDelete()">
+            Ignore
+          </button>
+    </div>
+    </div>
+  </div>
+</div>
+
+<!-- Error state -->
+   <div *ngIf="error && !loading" class="overlay2 ">
+  <!-- <img src="images/no_enough_text.svg" alt="" class=""> -->
+  <div class="warning_box2 rounded-5 p-4 text-center ">
+    <div class=" bg p-3 rounded-5">
+      <span class="rounded-5 "></span>
+        <!-- <div class="bg"></div> -->
+        <img src="images/no_enough_text.svg" alt="" class="">
+    </div>
+    <div class="warning_box_content  text-center rounded-5 p-4">
+        <i class="fa-solid fa-xmark close"  (click)="closeWarning()"></i>
+        <i class="fa-solid fa-triangle-exclamation fa-2x text-danger mb-3 warning_icon "></i>
+        <h4 class="fw-bold mb-2">{{error}}</h4>
+        <p>Please click retry to load the summarizes</p>
+        <div class="d-flex justify-content-center mt-3">
+          <button type="button"
+                  class="btn btn1 "
+                  (click)="loadSummaries()">
+            Retry
+          </button>
+    </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Modal for More/Read More -->
+  <!-- <div *ngIf="showMoreModal" class="modal-overlay" (click)="closeMoreModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>
+          <i class="fas fa-info-circle"></i>
+          {{ modalSummary?.Topic || modalSummary?.Book || 'Summary Details' }}
+        </h3>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="modalSummary">
+          <div class="summary-section">
+            <h4>Original Text</h4>
+            <p class="original-text">{{ modalSummary.Text || modalSummary.Book }}</p>
+          </div>
+          <div class="summary-section">
+            <h4>Summary</h4>
+            <p class="summary-text">{{ modalSummary.Summary }}</p>
+          </div>
+          <div class="modal-actions">
+            <button class="action-btn copy-btn" (click)="copyToClipboard(modalSummary.Summary, modalSummary.id)" [title]="copiedSummaryIds.has(modalSummary.id) ? 'Text copied!' : 'Copy Text'">
+              <i class="fas" [class.fa-copy]="!copiedSummaryIds.has(modalSummary.id)" [class.fa-check]="copiedSummaryIds.has(modalSummary.id)"></i>
+            </button>
+            <button class="action-btn delete-btn" (click)="confirmDelete(modalSummary.id)" [disabled]="isDeleting(modalSummary.id)" [title]="isDeleting(modalSummary.id) ? 'Deleting...' : 'Delete summary'">
+              <i class="fas" [class.fa-trash]="!isDeleting(modalSummary.id)" [class.fa-spinner]="isDeleting(modalSummary.id)"></i>
+            </button>
+            <button class="action-btn close-btn" (click)="closeMoreModal()" title="Close">
+              <i class="fas fa-times"></i> Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> -->
+</div>
+
+<!-- Chat Modal -->
+<div class="modal-overlay" *ngIf="showChatModal && chatModalSummary && chatModalSummary.id !== undefined">
+  <div class="modal-container" style="max-width: 700px;">
+    <span class="id">#{{ chatModalSummary.id }}</span>
+    <i class="fas fa-times close-modal" (click)="closeChatModal()"></i>
+    <div class="modal-body">
+      <h2 class="mb-4">
+        <i class="fas fa-comments"></i>
+        Chat about this {{ chatModalType === 'book' ? 'Book' : 'Text' }} Summary
+      </h2>
+      <div class="chat-section position-relative" id="chatSection">
+        <div class="chat-header">
+          <h3><i class="fas fa-comments"></i> Chat</h3>
+        </div>
+        <div class="chat-messages">
+          <div *ngFor="let message of chatMessagesMap[chatModalSummary.id]"
+              class="message"
+              [ngClass]="message.type">
+            <i *ngIf="message.type === 'system'" class="fas fa-robot"></i>
+            <i *ngIf="message.type === 'user'" class="fas fa-user"></i>
+            <i *ngIf="message.type === 'assistant'" class="fas fa-robot"></i>
+            <div class="message-content">
+              <p>{{ message.content }}</p>
+              <small *ngIf="message.timestamp" class="message-time">
+                {{ message.timestamp | date:'shortTime' }}
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="showEmptyTextWarning" class="overlay2 ">
+        <div class="warning_box2 rounded-5 p-4 text-center ">
+          <div class=" bg p-3 rounded-5">
+            <span class="rounded-5 "></span>
+            <img src="images/no_enough_text.svg" alt="" class="">
+          </div>
+          <div class="warning_box_content  text-center rounded-5 p-4">
+            <i class="fa-solid fa-xmark close" (click)="showEmptyTextWarning = false"></i>
+            <i class="fa-solid fa-triangle-exclamation fa-2x text-danger mb-3 warning_icon "></i>
+            <h4 class="fw-bold mb-2">No Question Asked</h4>
+            <p>Please ask a question before clicking.</p>
+            <div class="d-flex justify-content-center mt-3">
+              <button type="button"
+                      class="btn btn1  me-2"
+                      (click)="showEmptyTextWarning = false">
+                Try Again
+              </button>
+              <button type="button"
+                      class="btn btn2 btn-outline-secondary"
+                      (click)="showEmptyTextWarning = false">
+                Ignore
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,37 @@
+@if (!(controls?.get('rePassword'))) {
+  @if (controls?.errors && controls?.touched) {
+    <div class="alert alert-danger my-3" role="alert">
+      <ul class="mb-0 ps-3">
+        @if (controls?.getError('required')) {
+          <li>Input is required.</li>
+        }
+        @if (controls?.getError('minlength')) {
+          <li>Input must be at least 2 characters long.</li>
+        }
+        @if (controls?.getError('maxlength')) {
+          <li>Input must not exceed 20 characters.</li>
+        }
+        @if (controls?.getError('email')) {
+          <li>Please enter a valid email address.</li>
+        }
+        @if (controls?.getError('pattern')) {
+          <li>Please enter a valid password that matches the pattern:</li>
+          <ul class="mb-0 ps-4">
+            <li>Minimum eight characters</li>
+            <li>At least one uppercase letter</li>
+            <li>At least one lowercase letter</li>
+            <li>One number and one special character</li>
+          </ul>
+        }
+      </ul>
+    </div>
+  }
+} @else {
+  @if (controls?.getError('mismatch') && controls?.get('rePassword')?.touched) {
+    <div class="alert alert-danger my-3" role="alert">
+      <ul class="mb-0 ps-3">
+        <li>Passwords do not match.</li>
+      </ul>
+    </div>
+  }
+}

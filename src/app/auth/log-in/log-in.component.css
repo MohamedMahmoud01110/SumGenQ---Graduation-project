@@ -10,7 +10,8 @@ body {
 }
 
 .custom__shadow {
-  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.8);
+  box-shadow: #00ADB5 0px 0px 20px 0px;
+
 }
 
 
@@ -26,6 +27,9 @@ nav {
 }
 .login-form{
   margin-top: 120px;
+}
+.login-form-container{
+ border-radius: 30px;
 }
 span{
   font-size: 20px;
@@ -53,7 +57,19 @@ a:hover{
   color: var(--hover-color);
   text-decoration: underline;
 }
+span a{
+    text-decoration: none;
 
+  }
+i{
+  cursor: pointer;
+  position: absolute;
+  top: 11px;
+  right: 15px;
+}
+.bg-gray{
+  background-color: #536b78;
+}
 @media all and (max-width: 768px) {
   .login-form{
    width: 100% !important;
@@ -62,6 +78,5 @@ a:hover{
   span{
     font-size: 16px;
   }
-
 
  }

@@ -1,5 +1,37 @@
-<app-navbar></app-navbar>
-<div class="container">
+<!-- <app-navbar layout="auth"></app-navbar> -->
+<div class="container-fluid">
   <router-outlet></router-outlet>
 </div>
 <app-footer></app-footer>
+<!-- <ngx-spinner class="custom-spinner" bdColor = "rgba(0, 0, 0, 0.8)" size = "medium" color = "#00adb5" type = "square-jelly-box" [fullScreen] = "false"><p style="color: white" > Loading... </p></ngx-spinner> -->
+
+<ngx-spinner
+  class="global-spinner"
+  bdColor="rgb(0, 0, 0, 0.8)"
+  size="medium"
+  color="#00adb5"
+  type="square-jelly-box "
+  [fullScreen]="true">
+  <p style="color:white">Loading...</p>
+</ngx-spinner>
+
+<!--
+<app-navbar></app-navbar>
+
+<div class="container position-relative">
+  <div class="global-spinner-wrapper" *ngIf="isLoading">
+    <ngx-spinner
+      bdColor="rgba(0, 0, 0, 0.8)"
+      size="medium"
+      color="#00adb5"
+      type="square-jelly-box"
+      [fullScreen]="false"
+      class="custom-spinner">
+      <p style="color: #00adb5">Loading...</p>
+    </ngx-spinner>
+  </div>
+
+  <router-outlet></router-outlet>
+</div>
+
+<app-footer></app-footer> -->
