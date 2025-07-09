@@ -18,23 +18,23 @@ import { QuizViewerComponent } from './components/quiz-viewer/quiz-viewer.compon
 
 export const routes: Routes = [
   {path: '', component: AuthLayoutComponent, canActivate:[isLoggedGuard] , children: [
-    { path: '', component: HomeComponent, title: 'Text Summarizer' },
-    {path: 'login', component: LogInComponent, title:'Text Summarization - Login'},
-    {path: 'signup', component: SignUpComponent, title:'Text Summarization - Sign Up'},
+    { path: '', component: HomeComponent, title: 'SumGenQ - Home' },
+    {path: 'login', component: LogInComponent, title:'SumGenQ - Login'},
+    {path: 'signup', component: SignUpComponent, title:'SumGenQ - Sign Up'},
 
   ]
   },
     {path:'', component: MainLayoutComponent, canActivate:[authGuard], children: [
 
-  { path: '', component: HomeComponent, title: 'Text Summarizer' },
-  { path: 'home', component: HomeComponent, title: 'Home' },
-  { path: 'text', component: TextPageComponent, title: 'Text Page' },
-  { path: 'book', component: BookPageComponent, title: 'Book Page' },
-  { path: 'quiz', component: QuizComponent, title: 'Quiz Page' },
-  { path: 'quiz-viewer', component: QuizViewerComponent, title: 'Quiz Viewer' },
-  { path: 'about', component: AboutUsComponent, title: 'About Us' },
-  { path: 'summary', component: BookSummaryViewerComponent, title: 'Summary Page' },
-  { path: 'history', component: HistoryComponent, title: 'History' },
+  { path: '', component: HomeComponent, title: 'SumGenQ' },
+  { path: 'home', component: HomeComponent, title: 'SumGenQ-Home' },
+  { path: 'text', component: TextPageComponent, title: 'SumGenQ-Text Page' },
+  { path: 'book', component: BookPageComponent, title: 'SumGenQ-Book Page' },
+  { path: 'quiz', component: QuizComponent, title: 'SumGenQ-Quiz Page' },
+  { path: 'quiz-viewer', component: QuizViewerComponent, title: 'SumGenQ-Quiz Viewer' },
+  { path: 'about', component: AboutUsComponent, title: 'SumGenQ-About Us' },
+  { path: 'summary', component: BookSummaryViewerComponent, title: 'SumGenQ-Summary Page' },
+  { path: 'history', component: HistoryComponent, title: 'SumGenQ-History' },
   // Removed signup and login routes from main layout - they should only be in auth layout
   // { path: '**', component: NotFoundComponent, title: 'Not Found' },
 ]},
