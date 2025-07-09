@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { FileUploadService } from '../../services/file-upload.service';
 import { QuizService, QuizResponse, MCQ, TrueFalse, Essay, UserAnswers, GradeResponse } from '../../services/quiz.service';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
+import { ThemeService } from '../../services/theme.service';
 
 interface Question {
   id: number;
@@ -25,10 +26,11 @@ interface Question {
 export class QuizComponent implements OnInit {
   // Quiz State
   quizStarted = false;
+  theme ='';
   quizCompleted = false;
   isLoading = false;
   showReviewModal = false;
-  errorMessage = '';
+  error: string = '';
 
   // File Upload Properties
   selectedFile: File | null = null;
@@ -37,7 +39,7 @@ export class QuizComponent implements OnInit {
   @ViewChild('fileInput') fileInput: any;
 
   // Quiz Settings
-  difficulty = 'medium';
+  difficulty :string = 'medium';
 
   // Quiz Progress
   currentQuestionIndex = 0;
@@ -65,74 +67,95 @@ export class QuizComponent implements OnInit {
   constructor(
     public fileUploadService: FileUploadService,
     private quizService: QuizService,
-    private router: Router
+    private router: Router,
+    private themeservice : ThemeService
   ) {}
 
-  ngOnInit(): void {
-    // Check backend health on component initialization
-    this.checkBackendHealth();
+    ngOnInit(): void {
+      this.theme = this.themeservice.getTheme();
+      this.themeservice.theme$.subscribe((theme) => {
+        this.theme = theme;
+      });
   }
 
-  // Backend Health Check
-  checkBackendHealth(): void {
-    this.quizService.checkQuizHealth().subscribe({
-      next: (response) => {
-        console.log('Quiz service health:', response);
-      },
-      error: (error) => {
-        console.error('Quiz service health check failed:', error);
-        this.errorMessage = 'Backend service is not available. Please try again later.';
-      }
-    });
+  onDifficultyChange() {
+    console.log('Difficulty changed to:', this.difficulty);
+
+    // Example: Take action depending on the selected difficulty
+    if (this.difficulty === 'easy') {
+      // Perform actions for easy level
+    } else if (this.difficulty === 'medium') {
+      // Perform actions for medium level
+    } else if (this.difficulty === 'hard') {
+      // Perform actions for hard level
+    }
   }
 
-  // File Upload Methods
+
+
   formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
-
   triggerFileInput(event?: Event): void {
     if (this.fileInput) {
       event?.stopPropagation();
       this.fileInput.nativeElement.click();
     }
   }
-
   onFileSelected(event: Event): void {
-    const target = event.target as HTMLInputElement | null;
-    if (!target || !target.files || !target.files[0]) {
+  const target = event.target as HTMLInputElement | null;
+  if (!target || !target.files || !target.files[0]) {
+    return;
+  }
+
+  const file = target.files[0];
+  if (file) {
+    // Check if file is supported first
+    if (!this.isSupportedFile(file)) {
+      this.showUnsupportedFileWarning = true;
       return;
     }
 
-    const file = target.files[0];
-    if (file) {
-      // Validate file using service
-      const validation = this.quizService.validateFile(file);
-      if (!validation.isValid) {
-        this.errorMessage = validation.error || 'Invalid file';
-        this.showUnsupportedFileWarning = true;
-        return;
-      }
+    // Set the file and store in service
+    this.selectedFile = file;
+    this.fileUploadService.setFile(file);
 
-      // Set the file and store in service
-      this.selectedFile = file;
-      this.fileUploadService.setFile(file);
+    // Clear any previous errors
+    this.error = '';
+    this.showUnsupportedFileWarning = false;
 
-      // Clear any previous errors
-      this.showUnsupportedFileWarning = false;
-      this.errorMessage = '';
-
-      console.log('File selected and stored:', file.name);
-    }
+    console.log('File selected and stored:', file.name);
   }
-
+}
   private isSupportedFile(file: File): boolean {
-    const validation = this.quizService.validateFile(file);
-    return validation.isValid;
+    const allowedTypes = [
+      'application/pdf', // PDF
+      'application/msword', // Word
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // Word (OpenXML)
+      'text/plain' // .txt
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      this.error = 'Unsupported file type';
+      this.showUnsupportedFileWarning = true;
+      console.log('Unsupported file type:', file.type);
+      return false;
+    }
+
+    if (file.size > 25 * 1024 * 1024) {
+      this.error = 'File exceeds 25 MB size limit';
+      this.showUnsupportedFileWarning = true;
+      return false;
+    }
+
+    this.showUnsupportedFileWarning = false;
+    console.log('File:', file.name, 'Type:', file.type, 'Size:', file.size);
+    return true;
+
   }
 
   onDrop(event: DragEvent): void {
@@ -143,35 +166,49 @@ export class QuizComponent implements OnInit {
     const file = event.dataTransfer?.files?.[0];
     if (file && this.isSupportedFile(file)) {
       this.selectedFile = file;
-      this.fileUploadService.setFile(file);
+      this.error = '';
     }
   }
-
   onDragOver(event: DragEvent) {
+    // event.preventDefault();
+    // event.stopPropagation();
+    // Optional: add a CSS class to highlight the drop zone
     event.preventDefault();
     event.stopPropagation();
+    // Optional: Add visual effect
     const box = event.currentTarget as HTMLElement;
     box.classList.add('dragover');
   }
+  removeFile(): void {
+    this.selectedFile = null;
+    this.quizResponse = null;
+    // this.summarizedText = '';
+    this.showUnsupportedFileWarning = false;
+    this.fileUploadService.clearAll();
+
+  }
 
   onDragLeave(event: DragEvent) {
-    event.preventDefault();
+    // event.preventDefault();
+    // event.stopPropagation();
+    // Optional: remove highlight class
+      event.preventDefault();
     event.stopPropagation();
+    // Optional: Remove visual effect
     const box = event.currentTarget as HTMLElement;
     box.classList.remove('dragover');
   }
 
-  removeFile(): void {
-    this.selectedFile = null;
-    this.showUnsupportedFileWarning = false;
-    this.errorMessage = '';
-    this.fileUploadService.clearAll();
+
+  processFile(file: File) {
+    console.log("File dropped or selected:", file);
+    // Add your logic to read or upload the file
   }
 
   closeWarning(): void {
     this.showNoFileWarning = false;
     this.showUnsupportedFileWarning = false;
-    this.errorMessage = '';
+    this.error = '';
   }
 
   // Quiz Methods
@@ -194,7 +231,7 @@ export class QuizComponent implements OnInit {
     }
 
     this.isLoading = true;
-    this.errorMessage = '';
+    this.error = '';
 
     // Call backend to generate quiz
     this.quizService.generateQuiz(this.selectedFile, this.difficulty).subscribe({
@@ -206,7 +243,7 @@ export class QuizComponent implements OnInit {
         console.log('Quiz generated successfully:', response);
 
         // Show success message
-        this.errorMessage = '';
+        this.error = '';
 
         // Store in localStorage for quiz viewer
         localStorage.setItem('currentQuiz', JSON.stringify({
@@ -216,7 +253,7 @@ export class QuizComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error.message || 'Failed to generate quiz. Please try again.';
+        this.error = error.message || 'Failed to generate quiz. Please try again.';
         console.error('Error generating quiz:', error);
       }
     });
@@ -403,7 +440,7 @@ export class QuizComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error.message || 'Failed to grade quiz. Please try again.';
+        this.error = error.message || 'Failed to grade quiz. Please try again.';
         console.error('Error grading quiz:', error);
         // Fallback to local calculation
         this.calculateResults();
@@ -477,8 +514,10 @@ export class QuizComponent implements OnInit {
     this.correctAnswers = 0;
     this.scorePercentage = 0;
     this.timeSpent = '';
-    this.errorMessage = '';
+    this.error = '';
     this.stopTimer();
+    // Clear stored quiz data
+    localStorage.removeItem('currentQuiz');
   }
 
   reviewAnswers(): void {
@@ -727,10 +766,18 @@ export class QuizComponent implements OnInit {
   // Navigate to quiz viewer
   navigateToQuizViewer(): void {
     if (this.quizResponse && this.questions.length > 0) {
+      // Save quiz data with difficulty to localStorage
+      localStorage.setItem('currentQuiz', JSON.stringify({
+        quizResponse: this.quizResponse,
+        questions: this.questions,
+        difficulty: this.difficulty
+      }));
+
       this.router.navigate(['/quiz-viewer'], {
         state: {
           quizResponse: this.quizResponse,
-          questions: this.questions
+          questions: this.questions,
+          level: this.difficulty
         }
       });
     }

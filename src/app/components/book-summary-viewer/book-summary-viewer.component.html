@@ -1,5 +1,5 @@
 <section id="viewer">
-  <div class="row mb-5 pb-5 pt-5 p-5">
+  <div class="row g-0 p-5 mb-5 pb-5 pt-5">
     <!-- PDF Viewer -->
     <!-- <div class="col-md-4 mt-2">
       <div *ngIf="fileName" class="pdf-container">
@@ -23,7 +23,17 @@
           <i class="fa-solid fa-xmark close_summary" (click)="closeSummary()"></i>
         </div>
         <div class="text-start summary_document ">
-          <textarea class="form-control p-4" rows="30" readonly>{{ summaryResult.summary }}</textarea>
+          <textarea class="form-control p-4" rows="30" readonly>{{formatTextAsProfessionalSummary( summaryResult.summary || '') }}</textarea>
+          <!-- <div *ngIf="summaryMetadata && (summaryMetadata.processing_time_seconds || summaryMetadata.word_count || summaryMetadata.instruction_used)">
+            <div class="mt-3">
+              <span *ngIf="summaryMetadata.processing_time_seconds">Processing Time: {{ summaryMetadata.processing_time_seconds }}s</span><br>
+              <span *ngIf="summaryMetadata.word_count">Word Count: {{ summaryMetadata.word_count }}</span><br>
+              <span *ngIf="summaryMetadata.instruction_used">Instruction Used: {{ summaryMetadata.instruction_used }}</span><br>
+              <span *ngIf="summaryMetadata.document_info?.word_count">Document Word Count: {{ summaryMetadata.document_info.word_count }}</span><br>
+              <span *ngIf="summaryMetadata.url_info?.title">URL Title: {{ summaryMetadata.url_info.title }}</span><br>
+              <span *ngIf="summaryMetadata.url_info?.author">URL Author: {{ summaryMetadata.url_info.author }}</span>
+            </div>
+          </div> -->
         </div>
         <div class="items_container  rounded-2 rounded-bottom-0">
             <!-- Word Count for Summarized Text -->

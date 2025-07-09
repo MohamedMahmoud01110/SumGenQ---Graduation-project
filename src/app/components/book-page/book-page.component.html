@@ -194,7 +194,9 @@
                   <h5>File Name</h5>
                   <p>
                     <ng-container *ngIf="selectedFile && selectedFile.name && selectedFile.name.length > 12; else shortName">
-                      {{ selectedFile && selectedFile.name ? selectedFile.name.slice(0, 14) : '' }}<br>{{ selectedFile && selectedFile.name ? selectedFile.name.slice(14) : '' }}
+                      <ng-container *ngFor="let chunk of getFileNameChunks(selectedFile.name, 12)">
+                        {{ chunk }}<br>
+                      </ng-container>
                     </ng-container>
                     <ng-template #shortName>
                       {{ selectedFile?.name }}
@@ -207,7 +209,7 @@
               </div>
               <div class="metadata-item">
                 <h5>File Type</h5>
-                <p>{{ analysisResult.analysis.file_metadata?.file_type?.toUpperCase() || analysisResult.analysis.url_metadata?.file_type?.toUpperCase() || 'URL' }}</p>
+                <p>{{ getFileExtension(selectedFile!.name)  }}</p>
               </div>
               <div class="metadata-item">
                 <h5>Word Count</h5>
@@ -246,9 +248,9 @@
               </div>
             </div>
             <h4>📝 Text Preview</h4>
-            <textarea rows="12" cols="140" class="analyze_text_area" >
+            <pre class="analyze_text_area">
               {{ analysisResult.analysis.text_preview }}
-            </textarea>
+            </pre>
           </div>
           </div>
         </div>

@@ -1,15 +1,5 @@
-<section class="quiz-viewer-section">
-  <div class="container">
-    <!-- Header -->
-    <div class="quiz-header text-center mb-5">
-      <h1 class="quiz-title">
-        <i class="fas fa-question-circle"></i>
-        Quiz Questions
-      </h1>
-      <p class="quiz-subtitle">
-        Answer all questions below. You can review and change your answers before submitting.
-      </p>
-    </div>
+<section class="quiz-viewer-section mb-5">
+  <div class="container  mt-2 pt-5">
 
     <!-- Error Message -->
     <div *ngIf="errorMessage" class="alert alert-danger text-center mb-4" role="alert">
@@ -18,7 +8,7 @@
     </div>
 
     <!-- Progress Bar -->
-    <div class="progress-section mb-4">
+    <div class="progress-section  mb-4">
       <div class="progress-info">
         <span class="progress-text">Completion: {{ getCompletionPercentage().toFixed(1) }}%</span>
         <span class="questions-count">{{ questions.length }} Questions</span>
@@ -35,7 +25,7 @@
           <span class="question-number">Question {{ i + 1 }}</span>
           <span class="question-type">
             {{ question.type === 'multiple_choice' ? 'Multiple Choice' :
-               question.type === 'true_false' ? 'True/False' : 'Essay' }}
+              question.type === 'true_false' ? 'True/False' : 'Essay' }}
           </span>
         </div>
 
@@ -89,29 +79,21 @@
       </div>
 
       <!-- Submit Button -->
-      <div class="submit-section text-center mt-5">
+      <div class="text-center">
         <button
           class="btn submit-quiz-btn"
-          [disabled]="!isQuizComplete() || isLoading"
+          [disabled]="isLoading"
           (click)="submitQuiz()">
-          <i *ngIf="!isLoading" class="fas fa-paper-plane"></i>
           <i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
           {{ isLoading ? 'Submitting...' : 'Submit Quiz' }}
         </button>
 
-        <button
-          class="btn download-quiz-btn ms-3"
-          [disabled]="questions.length === 0 || isLoading"
-          (click)="downloadQuiz()">
-          <i *ngIf="!isLoading" class="fas fa-download"></i>
-          <i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
-          {{ isLoading ? 'Downloading...' : 'Download Quiz' }}
-        </button>
 
-        <button class="btn btn-outline-secondary ms-3" (click)="goBackToQuiz()">
+
+        <!-- <button class="btn btn-outline-secondary ms-3" (click)="goBackToQuiz()">
           <i class="fas fa-arrow-left"></i>
           Back to Quiz Generator
-        </button>
+        </button> -->
       </div>
     </div>
 
@@ -123,6 +105,33 @@
       <p class="mt-3">Loading quiz questions...</p>
     </div>
   </div>
+  <!-- Incomplete answers warning-->
+        <div *ngIf="showIncompleteAnswersWarning" class="overlay2">
+      <div class="warning_box2 rounded-5 p-4 text-center">
+        <div class="bg p-3 rounded-5">
+          <span class="rounded-5"></span>
+          <img src="images/no_enough_text.svg" alt="" class="">
+        </div>
+        <div class="warning_box_content text-center rounded-5 p-4">
+          <i class="fa-solid fa-xmark close" (click)="closeIncompleteWarning()"></i>
+          <i class="fa-solid fa-triangle-exclamation fa-2x text-danger mb-3 warning_icon"></i>
+          <h4 class="fw-bold mb-2">Incomplete Answers</h4>
+          <p>Please make sure all questions are answered before submitting the quiz.</p>
+          <div class="d-flex justify-content-center mt-3">
+            <button type="button"
+                    class="btn btn1 me-2"
+                    (click)="showIncompleteAnswersWarning = false">
+              Go Back
+            </button>
+            <button type="button"
+                    class="btn btn2 btn-outline-secondary"
+                    (click)="showIncompleteAnswersWarning = false">
+              Ignore & Submit
+            </button>
+          </div>
+        </div>
+      </div>
+        </div>
 
   <!-- Results Modal -->
   <div *ngIf="showResultsModal" class="modal-overlay" (click)="closeResultsModal()">
@@ -178,7 +187,7 @@
                 <span class="question-number">Q{{ i + 1 }}</span>
                 <span class="question-type-badge">
                   {{ question.type === 'multiple_choice' ? 'MCQ' :
-                     question.type === 'true_false' ? 'T/F' : 'Essay' }}
+                    question.type === 'true_false' ? 'T/F' : 'Essay' }}
                 </span>
               </div>
 
@@ -206,7 +215,7 @@
                   <span class="answer-label">Your Answer:</span>
                   <span class="answer-value" [class.correct]="isTrueFalseCorrect(question)" [class.incorrect]="!isTrueFalseCorrect(question)">
                     {{ getTrueFalseUserAnswer(question.id) === true ? 'True' :
-                       getTrueFalseUserAnswer(question.id) === false ? 'False' : 'Not answered' }}
+                      getTrueFalseUserAnswer(question.id) === false ? 'False' : 'Not answered' }}
                   </span>
                 </div>
                 <div class="answer-row" *ngIf="!isTrueFalseCorrect(question)">
@@ -250,15 +259,20 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-primary" (click)="closeResultsModal()">
-          <i class="fas fa-check"></i>
-          Close
+        <button
+          class="btn download-quiz-btn ms-3"
+          [disabled]="questions.length === 0 || isLoading"
+          (click)="downloadQuiz()">
+          <i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
+          {{ isLoading ? 'Downloading...' : 'Download Quiz' }}
         </button>
-        <button class="btn btn-outline-secondary" (click)="goBackToQuiz()">
+        <button class="btn upload-btn" (click)="goBackToQuiz()">
           <i class="fas fa-plus"></i>
           New Quiz
         </button>
       </div>
     </div>
+
   </div>
+
 </section>

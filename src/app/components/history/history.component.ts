@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { HistoryService, TextSummary, BookSummary } from '../../services/history.service';
+import { HistoryService, TextSummary, BookSummary, Quiz, QuizQuestion } from '../../services/history.service';
 import { AuthService } from '../../auth/services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 
@@ -20,7 +20,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
   loading = false;
   theme : string = '';
   error = '';
-  activeTab: 'text' | 'book' = 'text';
+  activeTab: 'text' | 'book' | 'quiz' = 'text';
   searchTerm = '';
   filteredTextSummaries: TextSummary[] = [];
   filteredBookSummaries: BookSummary[] = [];
@@ -50,6 +50,11 @@ export class HistoryComponent implements OnInit, OnDestroy {
   chatModalSummary: TextSummary | BookSummary | null = null;
   chatModalType: 'text' | 'book' | null = null;
   showEmptyTextWarning: boolean = false;
+  quizzes: Quiz[] = [];
+  filteredQuizzes: Quiz[] = [];
+  showQuizExpandModal = false;
+  expandedQuiz: any = null;
+
 
   constructor(
     private historyService: HistoryService,
@@ -114,11 +119,29 @@ export class HistoryComponent implements OnInit, OnDestroy {
       }
     });
 
+    // Load quizzes
+    const quizSub = this.historyService.getUserQuizzes().subscribe({
+      next: (response) => {
+        if (response.status === 'success') {
+          this.quizzes = response.quizzes || [];
+          this.filteredQuizzes = [...this.quizzes];
+          console.log('Loaded quizzes:', this.quizzes);
+        } else {
+          this.error = 'Failed to load quizzes';
+        }
+      },
+      error: (err) => {
+        this.error = 'Failed to load quizzes';
+        console.error('Error loading quizzes:', err);
+      }
+    });
+
     this.subscriptions.add(textSub);
     this.subscriptions.add(bookSub);
+    this.subscriptions.add(quizSub);
   }
 
-  setActiveTab(tab: 'text' | 'book'): void {
+  setActiveTab(tab: 'text' | 'book' | 'quiz'): void {
     this.activeTab = tab;
     this.searchTerm = '';
     this.applySearch();
@@ -128,6 +151,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
     if (!this.searchTerm.trim()) {
       this.filteredTextSummaries = [...this.textSummaries];
       this.filteredBookSummaries = [...this.bookSummaries];
+      this.filteredQuizzes = [...this.quizzes];
       return;
     }
 
@@ -143,6 +167,14 @@ export class HistoryComponent implements OnInit, OnDestroy {
       summary.Book.toLowerCase().includes(term) ||
       summary.Summary.toLowerCase().includes(term) ||
       summary.Topic?.toLowerCase().includes(term)
+    );
+
+    this.filteredQuizzes = this.quizzes.filter(quiz =>
+      quiz.questions.some(q =>
+        q.question.toLowerCase().includes(term) ||
+        q.userAnswer.toLowerCase().includes(term) ||
+        q.rightAnswer.toLowerCase().includes(term)
+      )
     );
   }
 
@@ -219,7 +251,10 @@ export class HistoryComponent implements OnInit, OnDestroy {
   }
 
   getSummaryCount(): number {
-    return this.activeTab === 'text' ? this.filteredTextSummaries.length : this.filteredBookSummaries.length;
+    if (this.activeTab === 'text') return this.filteredTextSummaries.length;
+    if (this.activeTab === 'book') return this.filteredBookSummaries.length;
+    if (this.activeTab === 'quiz') return this.filteredQuizzes.length;
+    return 0;
   }
 
   clearSearch(): void {
@@ -264,20 +299,26 @@ export class HistoryComponent implements OnInit, OnDestroy {
 
   private deleteIndividualSummary(id: number): void {
     this.deletingItems.add(id);
-
-    const deleteSub = (this.activeTab === 'text'
-      ? this.historyService.deleteTextSummary(id)
-      : this.historyService.deleteBookSummary(id)
-    ).subscribe({
+    let deleteObs;
+    if (this.activeTab === 'text') {
+      deleteObs = this.historyService.deleteTextSummary(id);
+    } else if (this.activeTab === 'book') {
+      deleteObs = this.historyService.deleteBookSummary(id);
+    } else {
+      deleteObs = this.historyService.deleteQuiz(id);
+    }
+    const deleteSub = deleteObs.subscribe({
       next: (response) => {
         if (response.status === 'success') {
-          // Remove from arrays
           if (this.activeTab === 'text') {
             this.textSummaries = this.textSummaries.filter(item => item.id !== id);
             this.filteredTextSummaries = this.filteredTextSummaries.filter(item => item.id !== id);
-          } else {
+          } else if (this.activeTab === 'book') {
             this.bookSummaries = this.bookSummaries.filter(item => item.id !== id);
             this.filteredBookSummaries = this.filteredBookSummaries.filter(item => item.id !== id);
+          } else {
+            this.quizzes = this.quizzes.filter(item => item.id !== id);
+            this.filteredQuizzes = this.filteredQuizzes.filter(item => item.id !== id);
           }
         } else {
           this.error = response.message || 'Failed to delete summary';
@@ -290,22 +331,28 @@ export class HistoryComponent implements OnInit, OnDestroy {
         this.deletingItems.delete(id);
       }
     });
-
     this.subscriptions.add(deleteSub);
   }
 
   private deleteAllSummaries(): void {
-    const deleteSub = (this.activeTab === 'text'
-      ? this.historyService.deleteAllTextSummaries()
-      : this.historyService.deleteAllBookSummaries()
-    ).subscribe({
+    let deleteObs;
+    if (this.activeTab === 'text') {
+      deleteObs = this.historyService.deleteAllTextSummaries();
+    } else if (this.activeTab === 'book') {
+      deleteObs = this.historyService.deleteAllBookSummaries();
+    } else {
+      // No delete all quizzes endpoint, so just clear arrays
+      this.quizzes = [];
+      this.filteredQuizzes = [];
+      return;
+    }
+    const deleteSub = deleteObs.subscribe({
       next: (response) => {
         if (response.status === 'success') {
-          // Clear arrays
           if (this.activeTab === 'text') {
             this.textSummaries = [];
             this.filteredTextSummaries = [];
-          } else {
+          } else if (this.activeTab === 'book') {
             this.bookSummaries = [];
             this.filteredBookSummaries = [];
           }
@@ -318,7 +365,6 @@ export class HistoryComponent implements OnInit, OnDestroy {
         console.error('Error deleting all summaries:', err);
       }
     });
-
     this.subscriptions.add(deleteSub);
   }
 
@@ -330,7 +376,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
     if (this.deleteConfirmType === 'individual' && this.itemToDelete) {
       return `Are you sure you want to delete summary #${this.itemToDelete}?`;
     } else if (this.deleteConfirmType === 'all') {
-      const count = this.activeTab === 'text' ? this.textSummaries.length : this.bookSummaries.length;
+      const count = this.activeTab === 'text' ? this.textSummaries.length : this.activeTab === 'book' ? this.bookSummaries.length : this.quizzes.length;
       return `Are you sure you want to delete all ${count} ${this.activeTab} summaries? This action cannot be undone.`;
     }
     return '';
@@ -471,5 +517,15 @@ export class HistoryComponent implements OnInit, OnDestroy {
       event.preventDefault();
       this.askQuestion(summaryId);
     }
+  }
+
+  openQuizExpandModal(quiz: any) {
+    this.expandedQuiz = quiz;
+    this.showQuizExpandModal = true;
+  }
+
+  closeQuizExpandModal() {
+    this.showQuizExpandModal = false;
+    this.expandedQuiz = null;
   }
 }

@@ -81,7 +81,7 @@ body {
   color: var(--link-color);
   font-size: clamp(16px, 3vw, 21px);
   position: absolute;
-  right: 570px !important;
+  right: 450px !important;
   margin-bottom: 13px;
   border: #00ADB5;
 }
@@ -138,12 +138,13 @@ body {
 @media all and (min-width: 1300px) and (max-width: 1430px) {
 
   .theme_btn{
-    right: 350px  !important;
+    right: 250px  !important;
   }
 }
 @media all and (min-width: 1430px) and (max-width: 1490px){
   .theme_btn{
-    right: 450px !important;
+    right: 400px !important;
+
   }
 }
 @media (max-width: 580px) {

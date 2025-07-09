@@ -52,6 +52,34 @@ export interface ChatResponse {
   data: Chat[];
 }
 
+// Quiz-related interfaces
+export interface QuizQuestion {
+  question: string;
+  userAnswer: string;
+  userAnswerText?: string;
+  rightAnswer: string;
+  rightAnswerText?: string;
+  feedback:string
+}
+
+export interface Quiz {
+  id: number;
+  score: number;
+  level?: string;
+  questions: QuizQuestion[];
+}
+
+export interface QuizResponse {
+  status: string;
+  quizzes: Quiz[];
+}
+
+export interface AddQuizRequest {
+  Score: number;
+  Level?: string;
+  Questions: QuizQuestion[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -83,16 +111,12 @@ export class HistoryService {
     return throwError(() => new Error(errorMessage));
   }
 
+  // Text Summary Methods
   getTextSummaries(): Observable<any> {
     return this.http.get(`${this.baseUrl}TextSummarizes`, { headers: this.getAuthHeaders() });
   }
 
-  getBookSummaries(): Observable<any> {
-    return this.http.get(`${this.baseUrl}BookSummarizes`, { headers: this.getAuthHeaders() });
-  }
-
   addTextSummary(data: { Text: string; Summary: string; Topic: string }): Observable<AddSummaryResponse> {
-    // Send Text, Summary, and Topic to match your backend
     const payload = {
       Text: data.Text,
       Summary: data.Summary,
@@ -106,6 +130,31 @@ export class HistoryService {
     ).pipe(
       catchError(this.handleError)
     );
+  }
+
+  deleteTextSummary(id: number): Observable<DeleteResponse> {
+    return this.http.post<DeleteResponse>(
+      `${this.baseUrl}DeleteTextSummary`,
+      { id },
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  deleteAllTextSummaries(): Observable<DeleteResponse> {
+    return this.http.post<DeleteResponse>(
+      `${this.baseUrl}DeleteAllTextSummaries`,
+      {},
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Book Summary Methods
+  getBookSummaries(): Observable<any> {
+    return this.http.get(`${this.baseUrl}BookSummarizes`, { headers: this.getAuthHeaders() });
   }
 
   addBookSummary(data: { Book: string; Summary: string; Topic: string }): Observable<AddSummaryResponse> {
@@ -124,18 +173,6 @@ export class HistoryService {
     );
   }
 
-  // Delete individual text summary
-  deleteTextSummary(id: number): Observable<DeleteResponse> {
-    return this.http.post<DeleteResponse>(
-      `${this.baseUrl}DeleteTextSummary`,
-      { id },
-      { headers: this.getAuthHeaders() }
-    ).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  // Delete individual book summary
   deleteBookSummary(id: number): Observable<DeleteResponse> {
     return this.http.post<DeleteResponse>(
       `${this.baseUrl}DeleteBookSummary`,
@@ -146,18 +183,6 @@ export class HistoryService {
     );
   }
 
-  // Delete all text summaries
-  deleteAllTextSummaries(): Observable<DeleteResponse> {
-    return this.http.post<DeleteResponse>(
-      `${this.baseUrl}DeleteAllTextSummaries`,
-      {},
-      { headers: this.getAuthHeaders() }
-    ).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  // Delete all book summaries
   deleteAllBookSummaries(): Observable<DeleteResponse> {
     return this.http.post<DeleteResponse>(
       `${this.baseUrl}DeleteAllBookSummaries`,
@@ -168,8 +193,7 @@ export class HistoryService {
     );
   }
 
-
-    // Add a chat message to a book
+  // Chat Methods
   addChat(data: { BookId: number; Question: string; Answer: string }): Observable<AddSummaryResponse> {
     return this.http.post<AddSummaryResponse>(
       `${this.baseUrl}AddChat`,
@@ -180,7 +204,6 @@ export class HistoryService {
     );
   }
 
-  // Get all chat messages for a book
   getAllChat(bookId: number): Observable<ChatResponse> {
     return this.http.post<ChatResponse>(
       `${this.baseUrl}GetAllChat`,
@@ -191,14 +214,68 @@ export class HistoryService {
     );
   }
 
-  // Delete all chat messages for a book
-  deleteAllChat(bookId: number): Observable<DeleteResponse> {
-    return this.http.post<DeleteResponse>(
-      `${this.baseUrl}DeleteAllChat`,
-      { id: bookId },
+  // Quiz Methods
+  addQuiz(data: AddQuizRequest): Observable<AddSummaryResponse> {
+    return this.http.post<AddSummaryResponse>(
+      `${this.baseUrl}AddQuiz`,
+      data,
       { headers: this.getAuthHeaders() }
     ).pipe(
       catchError(this.handleError)
     );
+  }
+
+  getUserQuizzes(): Observable<QuizResponse> {
+    return this.http.get<QuizResponse>(
+      `${this.baseUrl}GetUserQuizzes`,
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  deleteQuiz(quizId: number): Observable<DeleteResponse> {
+    return this.http.delete<DeleteResponse>(
+      `${this.baseUrl}DeleteQuiz/${quizId}`,
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Helper Methods
+  createQuizData(score: number, questions: QuizQuestion[], level?: string): AddQuizRequest {
+    return {
+      Score: score,
+      Level: level || 'medium',
+      Questions: questions
+    };
+  }
+
+  // Utility method to format chat data
+  createChatData(bookId: number, question: string, answer: string): { BookId: number; Question: string; Answer: string } {
+    return {
+      BookId: bookId,
+      Question: question,
+      Answer: answer
+    };
+  }
+
+  // Utility method to format text summary data
+  createTextSummaryData(text: string, summary: string, topic: string): { Text: string; Summary: string; Topic: string } {
+    return {
+      Text: text,
+      Summary: summary,
+      Topic: topic
+    };
+  }
+
+  // Utility method to format book summary data
+  createBookSummaryData(book: string, summary: string, topic: string): { Book: string; Summary: string; Topic: string } {
+    return {
+      Book: book,
+      Summary: summary,
+      Topic: topic
+    };
   }
 }

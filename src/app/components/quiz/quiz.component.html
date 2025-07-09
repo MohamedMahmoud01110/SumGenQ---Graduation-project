@@ -1,39 +1,17 @@
 <section id="quiz" class="quiz-section">
-  <div class="container">
-    <!-- Quiz Header -->
-    <div class="quiz-header text-center mb-5">
-      <h1 class="quiz-title">
-        <i class="fas fa-question-circle"></i>
-        Interactive Quiz
-      </h1>
-      <p class="quiz-subtitle">
-        Test your knowledge with AI-generated questions from your documents
-      </p>
-    </div>
-
-    <!-- Error Message Display -->
-    <div *ngIf="errorMessage" class="alert alert-danger text-center mb-4" role="alert">
-      <i class="fas fa-exclamation-triangle me-2"></i>
-      {{ errorMessage }}
-    </div>
-
-    <!-- Success Message Display -->
-    <div *ngIf="quizResponse && !errorMessage" class="alert alert-success text-center mb-4" role="alert">
-      <i class="fas fa-check-circle me-2"></i>
-      Quiz generated successfully! You can now download it or start taking the quiz.
-    </div>
+  <div class="container ">
 
     <!-- Quiz Selection Screen -->
-    <div *ngIf="!quizStarted && !quizCompleted" class="quiz-selection">
-      <div class="selection-card">
-        <h2 class="selection-title">
-          <i class="fas fa-book-open"></i>
-          Create Your Quiz
-        </h2>
+    <div  class="quiz-selection">
+      <div class="position-relative" [class.hide]="selectedFile" >
+        <img [src]="theme==='dark'  ? 'images/drag-arrow-dark.jpg' : 'images/drag-arrow-light.jpg'" alt="Large curved arrow pointing toward the file upload area, indicating where to drag and drop documents. The arrow is set against a clean interface designed to guide users. No text is present in the image. The tone is clear and instructional." style="width: 150px; position: absolute; right: 110px; top: -70px;">
+        <img [src]="theme==='dark'  ? 'images/arrow-dark.jpg' : 'images/arrow-light.jpg'"  alt="" style="width: 80px; position: absolute; right:280px; top: -37px;">
+
+        </div>
 
         <!-- File Upload Section -->
-        <div class="d-flex justify-content-center align-items-center mb-5 p-5 mt-3">
-          <div class="col-md-8 text-center p-5 mb-2 form_container rounded-5">
+        <div class="d-flex justify-content-center align-items-center mb-5 p-5 mt-3 ">
+          <div class="col-md-8 text-center p-5 mb-2 form_container rounded-5 mt-3">
             <div class="upload-section">
               <div class="upload-area" id="uploadArea"
                 (dragover)="onDragOver($event)"
@@ -62,48 +40,39 @@
         </div>
 
         <!-- Quiz Settings -->
-            <div class="quiz-settings mt-4">
-          <div class="setting-group">
-            <label class="form-label">Difficulty Level:</label>
-            <select class="form-select" [(ngModel)]="difficulty">
+        <div class="quiz-settings mt-4">
+          <div class="setting-group d-flex justify-content-around align-items-center">
+            <label class="form-label mt-2 pt-1">Difficulty Level:</label>
+            <select class="form-select" [(ngModel)]="difficulty" (change)="onDifficultyChange()" [disabled]="!!(quizResponse && selectedFile && !isLoading)">
               <option value="easy">Easy</option>
               <option value="medium">Medium</option>
               <option value="hard">Hard</option>
             </select>
-              </div>
-            </div>
+          </div>
+        </div>
+
 
             <!-- Action Buttons -->
             <div class="d-flex justify-content-center gap-3 mt-4">
               <button
-                *ngIf="!quizResponse"
-                class="btn start-quiz-btn"
-                [disabled]="!selectedFile || isLoading"
-                (click)="startQuiz()">
-                <i *ngIf="!isLoading" class="fas fa-play"></i>
-                <i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
-                {{ isLoading ? 'Generating Quiz...' : 'Generate Quiz' }}
+              *ngIf="!selectedFile || !quizResponse || isLoading"
+              class="btn start-quiz-btn"
+              [disabled]="isLoading"
+              (click)="startQuiz()">
+              <i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
+              {{ isLoading ? 'Generating Quiz...' : 'Generate Quiz' }}
               </button>
 
               <button
-                *ngIf="quizResponse"
-                class="btn start-quiz-btn"
-                (click)="navigateToQuizViewer()">
-                <i class="fas fa-play"></i>
-                Start Quiz
-              </button>
-
-              <button
-                class="btn download-quiz-btn"
-                [disabled]="!selectedFile || !quizResponse || isLoading"
-                (click)="downloadQuiz()">
-                <i *ngIf="!isLoading" class="fas fa-download"></i>
-                <i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
-                {{ isLoading ? 'Downloading...' : 'Download Quiz' }}
+              *ngIf="quizResponse && selectedFile && !isLoading"
+              class="btn start-quiz-btn"
+              (click)="navigateToQuizViewer()">
+              <i class="fas fa-play"></i>
+              Start Quiz
               </button>
             </div>
           </div>
-          </div>
+        </div>
 
         <!-- No uploaded file warning-->
         <div *ngIf="showNoFileWarning" class="overlay2">
@@ -160,8 +129,9 @@
             </div>
           </div>
         </div>
-      </div>
     </div>
+
+
 
     <!-- Quiz Interface -->
     <div *ngIf="quizStarted && !quizCompleted" class="quiz-interface">

@@ -3,13 +3,21 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface BookSummaryResponse {
-  summary: string;
+  status: string;
+  document_id?: string;
+  session_id?: string;
+  filename?: string;
+  file_size?: number;
+  word_count?: number;
+  processing_time?: number;
+  summary_preview?: string;
+  message?: string;
+  summary?: string; // For backward compatibility
   metadata?: {
     processing_time_seconds?: number;
     word_count?: number;
     [key: string]: any;
   };
-  status: string;
 }
 
 export interface DocumentAnalysisResponse {
@@ -45,6 +53,7 @@ export interface URLSummaryResponse {
     [key: string]: any;
   };
   status: string;
+  session_id?: string;
 }
 
 export interface ChatRequest {
@@ -70,7 +79,12 @@ export class BookApiService {
   summarizeBook(file: File): Observable<BookSummaryResponse> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<BookSummaryResponse>(`${this.baseUrl}/summarize-file`, formData);
+    return this.http.post<BookSummaryResponse>(`${this.baseUrl}/upload-document`, formData);
+  }
+
+  // Get full summary by document ID
+  getFullSummary(documentId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/summary/${documentId}`);
   }
 
   // URL summarization only
@@ -78,11 +92,14 @@ export class BookApiService {
     return this.http.post<URLSummaryResponse>(`${this.baseUrl}/process-url`, urlRequest);
   }
 
-  // Chat with document - using legacy endpoint
-  chatWithDocument(file: File, question: string): Observable<ChatResponse> {
+  // Chat with document - using legacy endpoint, but allow optional sessionId
+  chatWithDocument(file: File, question: string, sessionId?: string): Observable<ChatResponse> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('question', question);
+    if (sessionId) {
+      formData.append('session_id', sessionId);
+    }
     return this.http.post<ChatResponse>(`${this.baseUrl}/chat`, formData);
   }
 
@@ -91,6 +108,16 @@ export class BookApiService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<DocumentAnalysisResponse>(`${this.baseUrl}/analyze-document`, formData);
+  }
+
+  chatWithSession(sessionId: string, question: string, userId?: string): Observable<ChatResponse> {
+    const formData = new FormData();
+    formData.append('session_id', sessionId);
+    formData.append('question', question);
+    if (userId) {
+      formData.append('user_id', userId);
+    }
+    return this.http.post<ChatResponse>(`${this.baseUrl}/chat-with-session`, formData);
   }
 
   // Health check
@@ -102,4 +129,8 @@ export class BookApiService {
   getConfig(): Observable<any> {
     return this.http.get(`${this.baseUrl}/config`);
   }
+
+
 }
+
+

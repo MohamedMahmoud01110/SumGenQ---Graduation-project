@@ -80,6 +80,7 @@ export class BookSummaryViewerComponent implements OnInit, OnDestroy {
         fileName: this.fileName,
         hasSummary: !!this.summaryResult
       });
+      console.log("this is summary: ",this.summaryResult.summary);
 
       // Save summary to history
       this.saveBookSummaryToHistory();
@@ -118,9 +119,16 @@ export class BookSummaryViewerComponent implements OnInit, OnDestroy {
                   this.bookSummaryId = found.id;
                 }
               }
+            },
+            error: (err) => {
+              console.warn('Could not fetch book summaries for history:', err);
             }
           });
         }
+      },
+      error: (err) => {
+        console.warn('Could not save book summary to history:', err);
+        // Don't show error to user as this is not critical functionality
       }
     });
   }
@@ -151,13 +159,74 @@ export class BookSummaryViewerComponent implements OnInit, OnDestroy {
     // Don't clear here as user might want to chat
   }
 
+
+  formatTextAsProfessionalSummary(rawText: string): string {
+    // Clean up raw input
+    const cleanedText = rawText.trim().replace(/\s+/g, ' ');
+
+    // Basic heuristics to split content (you can improve based on your data)
+    const sentences = cleanedText.match(/[^.!?]+[.!?]+/g) || [cleanedText];
+    const mainSummary = sentences.slice(0, 3).join(' '); // First 2–3 sentences
+
+    // Extract bullet-like lines for key points and themes
+    const lines = rawText.split('\n').map(line => line.trim());
+
+    const bulletLines = lines.filter(line =>
+      /^(\*|-|\d+\.)\s+/.test(line)
+    );
+
+    const midPoint = Math.ceil(bulletLines.length / 2);
+    const keyPoints = bulletLines.slice(0, midPoint).map(line => `- ${line.replace(/^(\*|-|\d+\.)\s+/, '')}`);
+    const themes = bulletLines.slice(midPoint).map(line => `- ${line.replace(/^(\*|-|\d+\.)\s+/, '')}`);
+
+    // Fallbacks in case no bullet points found
+    const keyPointsSection = keyPoints.length ? keyPoints.join('\n') : '- No key points identified.';
+    const themesSection = themes.length ? themes.join('\n') : '- No themes identified.';
+
+    // Construct final output
+    return `
+  1. **Main Summary:**
+
+  ${mainSummary}
+
+  2. **Key Points and Takeaways:**
+
+  ${keyPointsSection}
+
+  3. **Important Themes or Concepts:**
+
+  ${themesSection}
+  `.trim();
+  }
+
+
+  extractMainSummary(text: string): string {
+    const match = text.match(/1\.\s?\*\*Main Summary\:\*\*([\s\S]*?)2\.\s?\*\*/);
+    return match ? match[1].trim() : 'Main summary not found.';
+  }
+
+  extractBulletPoints(text: string, section: 'key points' | 'themes'): string {
+    const regex =
+      section === 'key points'
+        ? /2\.\s?\*\*Key Points and Takeaways\:\*\*([\s\S]*?)3\.\s?\*\*/
+        : /3\.\s?\*\*Important Themes or Concepts\:\*\*([\s\S]*)/;
+
+    const match = text.match(regex);
+    if (!match) return 'Section not found.';
+
+    // Format bullets
+    const lines = match[1]
+      .trim()
+      .split('\n')
+      .filter((line) => line.trim().startsWith('*'))
+      .map((line) => `- ${line.replace(/^\*\s?/, '').trim()}`);
+
+    return lines.length ? lines.join('\n') : 'No bullet points found.';
+  }
+
+
   // Chat methods
   askQuestion() {
-    console.log('=== DEBUG CHAT ===');
-    console.log('Current question:', this.currentQuestion);
-    console.log('File available:', !!this.file);
-    console.log('File name:', this.fileName);
-
     if (!this.currentQuestion.trim() || this.isLoadingChat) {
       this.showEmptyTextWarning = true;
       return;
@@ -165,15 +234,8 @@ export class BookSummaryViewerComponent implements OnInit, OnDestroy {
     if(this.currentQuestion.trim() === ''){
       this.currentQuestion = '';
       this.showEmptyTextWarning = true;
-    }
-    else{
+    } else {
       this.showEmptyTextWarning = false;
-    }
-
-
-    if (!this.file) {
-      this.addMessage('assistant', 'No file available for chat. Please re-upload the document.');
-      return;
     }
 
     // Add user message
@@ -182,35 +244,85 @@ export class BookSummaryViewerComponent implements OnInit, OnDestroy {
     this.currentQuestion = '';
     this.isLoadingChat = true;
 
-    // Send the actual file with the question
-    this.bookApi.chatWithDocument(this.file, question).subscribe({
-      next: (response: ChatResponse) => {
-        this.isLoadingChat = false;
-        const answer: string = response.answer || response.message || 'No response received';
-        this.addMessage('assistant', answer);
-        // Save chat to backend using the stored bookSummaryId
-        if (this.bookSummaryId) {
-          this.historyService.addChat({
-            BookId: this.bookSummaryId,
-            Question: question,
-            Answer: answer
-          }).subscribe();
-          console.log('Chat saved to history:', {
-            bookSummaryId: this.bookSummaryId,
-            question,
-            answer
-          });
+    // Use session-based chat if sessionId is available
+    const sessionId = this.summaryResult?.session_id || this.summaryResult?.metadata?.['session_id'] || null;
 
+    if (sessionId) {
+      this.bookApi.chatWithSession(sessionId, question).subscribe({
+        next: (response: ChatResponse) => {
+          this.isLoadingChat = false;
+          const answer: string = response.answer || response.message || 'No response received';
+          this.addMessage('assistant', answer);
+          // Save chat to backend using the stored bookSummaryId
+          if (this.bookSummaryId) {
+            this.historyService.addChat({
+              BookId: this.bookSummaryId,
+              Question: question,
+              Answer: answer
+            }).subscribe({
+              next: () => {
+                console.log('Chat saved to history:', {
+                  bookSummaryId: this.bookSummaryId,
+                  question,
+                  answer
+                });
+              },
+              error: (err) => {
+                console.warn('Could not save chat to history:', err);
+              }
+            });
+          }
+          this.scrollToBottom();
+        },
+        error: (error) => {
+          this.isLoadingChat = false;
+          this.addMessage('assistant', 'Sorry, there was a problem processing your question. Please try again later.');
+          console.error('Chat error:', error);
+          this.scrollToBottom();
         }
-        this.scrollToBottom();
-      },
-      error: (error: any) => {
-        this.isLoadingChat = false;
-        console.error('Chat error:', error);
-        this.addMessage('assistant', 'Sorry, I encountered an error while processing your question.');
-        this.scrollToBottom();
-      }
-    });
+      });
+    } else if (this.file) {
+      this.bookApi.chatWithDocument(this.file, question).subscribe({
+        next: (response: ChatResponse) => {
+          this.isLoadingChat = false;
+          const answer: string = response.answer || response.message || 'No response received';
+          this.addMessage('assistant', answer);
+          // Save chat to backend using the stored bookSummaryId
+          if (this.bookSummaryId) {
+            this.historyService.addChat({
+              BookId: this.bookSummaryId,
+              Question: question,
+              Answer: answer
+            }).subscribe({
+              next: () => {
+                console.log('Chat saved to history:', {
+                  bookSummaryId: this.bookSummaryId,
+                  question,
+                  answer
+                });
+              },
+              error: (err) => {
+                console.warn('Could not save chat to history:', err);
+              }
+            });
+          }
+          else {
+          // If no session ID and no way to chat, show error
+          this.isLoadingChat = false;
+          this.addMessage('assistant', 'Cannot chat without a valid session. Please re-upload the document.');
+          this.scrollToBottom();
+        }
+
+          this.scrollToBottom();
+        },
+        error: (error) => {
+          this.isLoadingChat = false;
+          this.addMessage('assistant', 'Sorry, there was a problem processing your question. Please try again later.');
+          console.error('Chat error:', error);
+          this.scrollToBottom();
+        }
+      });
+    }
   }
 
   addMessage(type: 'user' | 'assistant' | 'system', content: string) {
@@ -430,5 +542,42 @@ export class BookSummaryViewerComponent implements OnInit, OnDestroy {
     this.charCountOriginalText = origText.length;
     this.charCountSummarizedText = summarized.length;
     this.reductionPercent = this.wordCountOriginalText > 0 ? Math.round(100 * (this.wordCountOriginalText - this.wordCountSummarizedText) / this.wordCountOriginalText) : 0;
+  }
+
+  get summaryMain(): string {
+    if (!this.summaryResult?.summary) return '';
+    // Assume the first paragraph is the main summary
+    const parts = this.summaryResult.summary.split(/\n\s*\n/);
+    return parts[0] || '';
+  }
+
+  get keyPoints(): string[] {
+    if (!this.summaryResult?.summary) return [];
+    // Find the section that starts with 'Key Points' or similar, or the second paragraph
+    const parts = this.summaryResult.summary.split(/\n\s*\n/);
+    // Try to find bullet points (lines starting with *)
+    const bullets = this.summaryResult.summary.match(/\*\*? ?[\w\W]+?(?=\n|$)/g);
+    if (bullets) {
+      return bullets.map(b => b.replace(/^\*+\s*/, '').trim());
+    }
+    // Fallback: return the second paragraph split by lines
+    return (parts[1] || '').split(/\n/).map(l => l.trim()).filter(l => l);
+  }
+
+  get themes(): string[] {
+    if (!this.summaryResult?.summary) return [];
+    // Find the section that starts with 'Themes' or similar, or the third paragraph
+    const parts = this.summaryResult.summary.split(/\n\s*\n/);
+    // Try to find lines starting with * under a 'Themes' or 'Concepts' section
+    const themeSection = parts.find(p => /theme|concept/i.test(p));
+    if (themeSection) {
+      return themeSection.split(/\n/).filter(l => l.trim().startsWith('*')).map(l => l.replace(/^\*+\s*/, '').trim());
+    }
+    // Fallback: return the third paragraph split by lines
+    return (parts[2] || '').split(/\n/).map(l => l.trim()).filter(l => l);
+  }
+
+  get summaryMetadata(): any {
+    return this.summaryResult?.metadata || {};
   }
 }

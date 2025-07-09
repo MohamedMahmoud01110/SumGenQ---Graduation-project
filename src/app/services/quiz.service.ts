@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { HistoryService } from '../services/history.service';
 
 // Interfaces matching the FastAPI schemas
 export interface MCQ {
@@ -53,8 +54,9 @@ export interface HealthResponse {
 export class QuizService {
   private readonly baseUrl = 'http://localhost:8003'; // Match your FastAPI port
   private readonly apiUrl = `${this.baseUrl}/api`;
+  private quizSaved = false;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private historyService: HistoryService) { }
 
   /**
    * Generate a quiz from uploaded file

@@ -108,6 +108,9 @@ textarea:focus {
 h3 i.fa-comments{
   cursor: auto;
 }
+h3 i.fa-comments:hover{
+  color: #00ADB5;
+}
 .summarize_btn{
   width: 30%;
 }
@@ -317,6 +320,7 @@ h3 i.fa-comments{
   position: absolute;
   bottom: -15px;
   left: 0;
+  color: black;
 }
 .voice{
   position: absolute;

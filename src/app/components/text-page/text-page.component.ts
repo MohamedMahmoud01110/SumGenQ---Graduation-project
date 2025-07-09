@@ -27,7 +27,7 @@ export class TextPageComponent {
   isLoading :boolean=true;
   showArabicWarning: boolean = false;
   showTextLengthWarning: boolean = false;
-  models = ['Gemini', 'BART Base', 'T5 Small','BART Plus','Pegasus'];
+  models = ['Gemini', 'BART Pre Trained','BART Fine Tuned', 'T5 Small','Pegasus'];
   selectedModel: string = ''; // No default selected
   modelSend = this.selectedModel.replace('Model', '').trim();
   selectedType: string = 'summary';
@@ -78,13 +78,13 @@ export class TextPageComponent {
 
   modelToSend(selectedModel: string){
     this.selectedModel = selectedModel;
-    if(this.selectedModel === 'BART Base'){
+    if(this.selectedModel === 'BART Pre Trained'){
       this.modelSend = 'bart';
     }
     if(this.selectedModel === 'T5 Small'){
       this.modelSend = 'lora1';
     }
-    if(this.selectedModel === 'BART Plus'){
+    if(this.selectedModel === 'BART Fine Tuned'){
       this.modelSend = 'lora2';
     }
     return this.modelSend;
@@ -265,8 +265,42 @@ export class TextPageComponent {
     return firstWords + '...';
   }
 
+  // Format bullet points in a professional way
+  private formatBulletPoints(text: string): string {
+    if (!text) return text;
 
-submitText(event: Event): void {
+    // Split the text into lines
+    const lines = text.split('\n');
+    const formattedLines: string[] = [];
+
+    for (let line of lines) {
+      line = line.trim();
+      if (!line) continue;
+
+      // Remove asterisks and clean up the line
+      let cleanedLine = line.replace(/^\s*[\*\-•]\s*/, '').trim();
+
+      // If the line starts with common bullet point patterns, format it
+      if (cleanedLine.length > 0) {
+        // Capitalize the first letter
+        cleanedLine = cleanedLine.charAt(0).toUpperCase() + cleanedLine.slice(1);
+
+        // Ensure the line ends with proper punctuation
+        if (!cleanedLine.match(/[.!?]$/)) {
+          cleanedLine += '.';
+        }
+
+        // Add bullet point symbol
+        formattedLines.push(`• ${cleanedLine}`);
+      }
+    }
+
+    // Join lines with proper spacing
+    return formattedLines.join('\n\n');
+  }
+
+
+  submitText(event: Event): void {
   event.preventDefault();
 
   const text = this.userInput.value?.trim() || '';
@@ -304,12 +338,19 @@ submitText(event: Event): void {
   this.textApi.summarize(text, model, format).subscribe({
 
     next: (res) => {
-      this.summarizedText.setValue(res.summary);
+      let formattedSummary = res.summary;
+
+      // Format bullet points if bullet type is selected
+      if (this.selectedType === 'bullet') {
+        formattedSummary = this.formatBulletPoints(res.summary);
+      }
+
+      this.summarizedText.setValue(formattedSummary);
       this.isLoading = true;
       this.updateWordCountSummarizedText();
 
       // Save summary to history
-      this.saveSummaryToHistory(text, res.summary);
+      this.saveSummaryToHistory(text, formattedSummary);
     },
     error: (err) => {
       console.error('Error:', err);

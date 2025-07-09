@@ -44,6 +44,77 @@ export class BookPageComponent {
     public fileUploadService: FileUploadService,
     private themeservice : ThemeService) { }
 
+  private handleSummaryResponse(res: any): void {
+    if (res && res.status === 'success') {
+      // First, get the full summary using the document_id
+      if (res.document_id) {
+        this.bookApi.getFullSummary(res.document_id).subscribe({
+          next: (fullSummaryRes) => {
+            console.log("Full summary response:", fullSummaryRes);
+
+            // Use the full summary from the detailed endpoint
+            const fullSummary = fullSummaryRes?.summary?.main_summary ||
+                               fullSummaryRes?.summary ||
+                               res.summary_preview ||
+                               'Summary not available';
+
+            const summaryData = {
+              summary: fullSummary,
+              status: res.status,
+              session_id: res.session_id,
+              metadata: {
+                processing_time_seconds: res.processing_time,
+                word_count: res.word_count,
+                document_id: res.document_id,
+                filename: res.filename
+              }
+            };
+            this.fileUploadService.setSummary(summaryData);
+            console.log("Full summary result:", summaryData);
+            this.router.navigate(['/summary']);
+          },
+          error: (err) => {
+            console.error("Error getting full summary:", err);
+            // Fallback to preview if full summary fails
+            const summaryData = {
+              summary: res.summary_preview || res.summary || 'Summary not available',
+              status: res.status,
+              session_id: res.session_id,
+              metadata: {
+                processing_time_seconds: res.processing_time,
+                word_count: res.word_count,
+                document_id: res.document_id,
+                filename: res.filename
+              }
+            };
+            this.fileUploadService.setSummary(summaryData);
+            console.log("Fallback summary result:", summaryData);
+            this.router.navigate(['/summary']);
+          }
+        });
+      } else {
+        // Fallback if no document_id
+        const summaryData = {
+          summary: res.summary_preview || res.summary || 'Summary not available',
+          status: res.status,
+          session_id: res.session_id,
+          metadata: {
+            processing_time_seconds: res.processing_time,
+            word_count: res.word_count,
+            document_id: res.document_id,
+            filename: res.filename
+          }
+        };
+        this.fileUploadService.setSummary(summaryData);
+        console.log("Summary result:", res);
+        this.router.navigate(['/summary']);
+      }
+    } else {
+      console.error("Invalid response structure:", res);
+      this.error = 'Invalid response from server';
+    }
+  }
+
   ngOnInit(): void {
     //Called after the constructor, initializing input properties, and the first call to ngOnChanges.
     //Add 'implements OnInit' to the class.
@@ -235,6 +306,7 @@ export class BookPageComponent {
       // Store URL for processing
       this.fileUploadService.setUrl(this.urlInput);
 
+
       this.closeUrlModal();
       this.error = '';
 
@@ -265,13 +337,7 @@ export class BookPageComponent {
     this.bookApi.summarizeUrl(urlRequest).subscribe({
       next: (res: URLSummaryResponse) => {
         this.isLoadingSumamry = false;
-        this.summaryResult = {
-          summary: res.summary,
-          metadata: res.metadata,
-          status: res.status
-        };
-        this.fileUploadService.setSummary(this.summaryResult);
-        this.router.navigate(['/summary']);
+        this.handleSummaryResponse(res);
       },
       error: (err: any) => {
         this.isLoadingSumamry = false;
@@ -360,19 +426,26 @@ export class BookPageComponent {
               )
               .join('\n\n');
 
-            // ✅ Send file to backend for summarization
+                        // ✅ Send file to backend for summarization
             this.bookApi.summarizeBook(file).subscribe({
               next: (res) => {
                 this.isLoadingSumamry = false;
-                this.fileUploadService.setSummary(res);
-                this.router.navigate(['/summary']);
+                console.log("Raw response from API:", res);
+                console.log("Response type:", typeof res);
+                console.log("Response keys:", res ? Object.keys(res) : 'res is null/undefined');
+                this.handleSummaryResponse(res);
               },
               error: (err: any) => {
                 this.isLoadingSumamry = false;
+                console.error("Full error object:", err);
+                console.error("Error status:", err.status);
+                console.error("Error message:", err.message);
+                console.error("Error text:", err.statusText);
+
                 if (err.status === 0 || err.statusText === 'Unknown Error') {
-                  this.error = 'Backend server is not running. Please start the server at http://127.0.0.1:8000';
+                  this.error = 'Backend server is not running. Please start the server at http://127.0.0.1:8002';
                 } else {
-                  this.error = 'Error summarizing the book.';
+                  this.error = `Error summarizing the book: ${err.status} ${err.statusText}`;
                 }
                 console.error(err);
               }
@@ -393,8 +466,7 @@ export class BookPageComponent {
           this.bookApi.summarizeBook(file).subscribe({
             next: (res) => {
               this.isLoadingSumamry = false;
-              this.fileUploadService.setSummary(res);
-              this.router.navigate(['/summary']);
+              this.handleSummaryResponse(res);
             },
             error: (err: any) => {
               this.isLoadingSumamry = false;
@@ -423,8 +495,7 @@ export class BookPageComponent {
         this.bookApi.summarizeBook(file).subscribe({
           next: (res) => {
             this.isLoadingSumamry = false;
-            this.fileUploadService.setSummary(res);
-            this.router.navigate(['/summary']);
+            this.handleSummaryResponse(res);
           },
           error: (err: any) => {
             this.isLoadingSumamry = false;
@@ -444,8 +515,7 @@ export class BookPageComponent {
       this.bookApi.summarizeBook(file).subscribe({
         next: (res) => {
           this.isLoadingSumamry = false;
-          this.fileUploadService.setSummary(res);
-          this.router.navigate(['/summary']);
+          this.handleSummaryResponse(res);
         },
         error: (err: any) => {
           this.isLoadingSumamry = false;
@@ -545,6 +615,8 @@ export class BookPageComponent {
     this.bookApi.analyzeDocument(this.selectedFile).subscribe({
       next: (data: DocumentAnalysisResponse) => {
         this.analysisResult = data;
+        // console.log("analysisResult:",this.analysisResult);
+
         this.processingTimeMs = Date.now() - startTime;
         console.log('Analysis complete in', this.processingTimeMs, 'ms');
         this.isLoadingAnalysis = false;
@@ -568,4 +640,44 @@ export class BookPageComponent {
   // Clear sessionStorage when component is destroyed
   sessionStorage.removeItem('summaryData');
   }
+
+  // getFormattedTextPreview(text: string): string {
+  //   if (!text) return '';
+  //   // Split into lines
+  //   const lines = text.split(/\r?\n/);
+  //   // Find minimum indentation (spaces/tabs) for non-empty lines
+  //   let minIndent: number | null = null;
+  //   for (const line of lines) {
+  //     if (line.trim() === '') continue;
+  //     const match = line.match(/^(\s*)/);
+  //     if (match) {
+  //       const indent = match[1].length;
+  //       if (minIndent === null || indent < minIndent) {
+  //         minIndent = indent;
+  //       }
+  //     }
+  //   }
+  //   // Remove minIndent spaces/tabs from the start of each line
+  //   if (minIndent && minIndent > 0) {
+  //     return lines.map(line => line.startsWith(' '.repeat(minIndent)) || line.startsWith('\t'.repeat(minIndent)) ? line.slice(minIndent) : line).join('\n');
+  //   }
+  //   return text;
+
+  // }
+
+  getFileNameChunks(name: string, chunkSize: number): string[] {
+    if (!name) return [];
+    const chunks = [];
+    for (let i = 0; i < name.length; i += chunkSize) {
+      chunks.push(name.slice(i, i + chunkSize));
+    }
+    return chunks;
+  }
+
+  getFileExtension(filename: string): string {
+    if (!filename) return '';
+    const idx = filename.lastIndexOf('.');
+    return idx !== -1 ? filename.substring(idx + 1).toLowerCase() : '';
+  }
+
 }

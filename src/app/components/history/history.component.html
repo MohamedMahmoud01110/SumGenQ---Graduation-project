@@ -53,7 +53,7 @@
         (click)="setActiveTab('text')"
       >
         <i class="fas fa-file-alt"></i>
-        Text Summaries
+        Text Summ
         <span class="tab-count">{{ filteredTextSummaries.length }}</span>
       </button>
       <button
@@ -62,8 +62,17 @@
         (click)="setActiveTab('book')"
       >
         <i class="fas fa-book"></i>
-        Book Summaries
+        Book Summ & Chat
         <span class="tab-count">{{ filteredBookSummaries.length }}</span>
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'quiz'"
+        (click)="setActiveTab('quiz')"
+      >
+        <i class="fas fa-question-circle"></i>
+        Quiz
+        <span class="tab-count">{{ quizzes.length || 0 }}</span>
       </button>
     </div>
 
@@ -75,7 +84,7 @@
         title="Delete all summaries"
       >
         <i class="fas fa-trash-alt"></i>
-        Delete All {{ activeTab === 'text' ? 'Text' : 'Book' }} Summaries
+        Delete All {{ activeTab === 'text' ? 'Text' : activeTab === 'book' ? 'Book' : 'Quiz' }} Summaries
       </button>
     </div>
 
@@ -268,6 +277,66 @@
         </div>
       </div>
 
+      <!-- Quiz Tab -->
+      <div *ngIf="activeTab === 'quiz'" class="tab-content">
+        <div *ngIf="filteredQuizzes.length === 0" class="empty-state">
+          <div class="empty-icon">
+            <i class="fas fa-question-circle"></i>
+          </div>
+          <h3>No quiz history found</h3>
+          <p *ngIf="searchTerm">Try adjusting your search terms</p>
+          <p *ngIf="!searchTerm">Take a quiz to see your history here</p>
+          <button class="create-btn" routerLink="/quiz">
+            <i class="fas fa-plus"></i>
+            Generate Quiz
+          </button>
+        </div>
+        <div *ngIf="filteredQuizzes.length > 0" class="summaries-grid">
+          <div *ngFor="let quiz of filteredQuizzes" class="summary-card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fas fa-question-circle card-icon"></i>
+                <h3>Quiz #{{ quiz.id }}</h3>
+              </div>
+              <div class="card-actions">
+                <button class="action-btn delete-btn" (click)="confirmDelete(quiz.id)" [disabled]="isDeleting(quiz.id)" [title]="isDeleting(quiz.id) ? 'Deleting...' : 'Delete quiz'">
+                  <i class="fas" [class.fa-trash]="!isDeleting(quiz.id)" [class.fa-spinner]="isDeleting(quiz.id)"></i>
+                </button>
+                <button class="action-btn expand-btn" (click)="openQuizExpandModal(quiz)" title="Expand">
+                  <i class="fas fa-expand-alt"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="summary-section">
+                <h4>Score</h4>
+                <p class="original-text">{{ quiz.score }}/{{100}}</p>
+              </div>
+              <div class="summary-section">
+                <h4 >Level</h4>
+                <p class="original-text">{{ quiz.level }}</p>
+              </div>
+              <div class="summary-text">
+                <h4>Questions</h4>
+                <ul>
+                  <li *ngFor="let q of quiz.questions.slice(0, 1); let i = index">
+                    <strong>Q{{ i + 1 }}:</strong> {{ q.question }}<br>
+                    <strong>Your Answer:</strong> {{ q.userAnswer }}<br>
+                    <strong>Correct Answer:</strong> {{ q.rightAnswer }} <br> <br>
+                  </li>
+                  <li *ngIf="quiz.questions.length > 5" class="text-white">
+                    <em>... and {{ quiz.questions.length - 1 }} more questions</em>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="id">#{{ quiz.id }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Expand Text Modal -->
       <div class="modal-overlay" *ngIf="showTextExpandModal">
         <div class="modal-container">
@@ -323,6 +392,29 @@
             <textarea class="p-3 px-4" name="" id="" cols="100" rows="25">{{ expandedBookSummary?.Summary }}</textarea>
             <div class="modal-footer">
               <!-- Buttons moved to headers -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expand Quiz Modal -->
+      <div class="modal-overlay" *ngIf="showQuizExpandModal">
+        <div class="modal-container">
+          <span class="id">#{{ expandedQuiz?.id }}</span>
+          <i class="fas fa-times close-modal" (click)="closeQuizExpandModal()"></i>
+          <div class="modal-body">
+            <h2 class="mb-4">Quiz #{{ expandedQuiz?.id }} - Score: {{ expandedQuiz?.score }}/ {{100}}</h2>
+            <div *ngFor="let q of expandedQuiz?.questions; let idx = index" class="mb-4">
+              <h4>Q{{ idx + 1 }}: {{ q.question }}</h4>
+              <p class="your-answer"><strong >Your Answer:</strong> {{ q.userAnswer }}</p>
+              <p class="correct-answer"><strong >Correct Answer:</strong> {{ q.rightAnswer }}</p>
+              <ng-container *ngIf="idx + 1 === 9 || idx + 1 === 10">
+                <br><br>
+                <p class="feedback-item"><strong class="text-black">Feedback:</strong> {{ q.feedback }}</p>
+              </ng-container>
+            </div>
+            <div class="modal-footer">
+              <!-- Optionally add copy or other actions here -->
             </div>
           </div>
         </div>

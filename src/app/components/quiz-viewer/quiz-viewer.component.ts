@@ -4,12 +4,15 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { QuizService, QuizResponse, UserAnswers, GradeResponse } from '../../services/quiz.service';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
+import { HistoryService } from '../../services/history.service';
 
 interface Question {
   id: number;
   question: string;
   type: 'multiple_choice' | 'true_false' | 'essay';
   options?: string[];
+  feedback: string;
+  // level:string;
   correctAnswer: number | string | boolean;
   explanation?: string;
 }
@@ -31,9 +34,14 @@ export class QuizViewerComponent implements OnInit {
     essays: []
   };
 
+  // Add difficulty property
+  difficulty: string = '';
+
   // UI State
   isLoading = false;
   showResultsModal = false;
+  showIncompleteAnswersWarning = false;
+
   errorMessage = '';
 
   // Results
@@ -41,18 +49,24 @@ export class QuizViewerComponent implements OnInit {
   scorePercentage = 0;
   timeSpent = '';
 
+  private quizSaved = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private quizService: QuizService
+    private quizService: QuizService,
+    private historyService: HistoryService
   ) {}
 
-  ngOnInit(): void {
+    ngOnInit(): void {
     // Get quiz data from route state or localStorage
     const navigation = this.router.getCurrentNavigation();
     if (navigation?.extras.state) {
       this.quizResponse = navigation.extras.state['quizResponse'];
       this.questions = navigation.extras.state['questions'];
+      this.difficulty = navigation.extras.state['difficulty'] || '';
+      console.log("difficulty is: ",this.difficulty);
+
       this.initializeUserAnswers();
     } else {
       // Try to get from localStorage as fallback
@@ -67,12 +81,13 @@ export class QuizViewerComponent implements OnInit {
         const quizData = JSON.parse(storedQuiz);
         this.quizResponse = quizData.quizResponse;
         this.questions = quizData.questions;
+        this.difficulty = quizData.difficulty || 'medium'; // Load difficulty from localStorage
         this.initializeUserAnswers();
       } else {
-        this.errorMessage = 'No quiz data found. Please generate a new quiz.';
+        this.router.navigate(['/not-found']);
       }
     } catch (error) {
-      this.errorMessage = 'Error loading quiz data. Please generate a new quiz.';
+      this.router.navigate(['/not-found']);
     }
   }
 
@@ -107,6 +122,9 @@ export class QuizViewerComponent implements OnInit {
       this.userAnswers.essays[essayIndex] = answer;
     }
   }
+  closeIncompleteWarning(): void {
+  this.showIncompleteAnswersWarning = false;
+}
 
   // Helper methods to find question indices
   private getMCQIndex(questionId: number): number {
@@ -178,10 +196,22 @@ export class QuizViewerComponent implements OnInit {
 
   getMCQCorrectAnswerText(question: Question): string {
     if (!question.correctAnswer || !question.options) return '';
-    const idx = (question.correctAnswer as string).charCodeAt(0) - 65;
-    // Remove leading letter/period/space from the answer text if present
+    let idx: number;
+    let letter: string;
+    if (typeof question.correctAnswer === 'string') {
+      letter = question.correctAnswer.toUpperCase();
+      idx = letter.charCodeAt(0) - 65;
+    } else if (typeof question.correctAnswer === 'number') {
+      idx = question.correctAnswer;
+      letter = String.fromCharCode(65 + idx);
+    } else {
+      return '';
+    }
+    // Debug log
+   //console.log('MCQ CorrectAnswer:', question.correctAnswer, 'Letter:', letter, 'Index:', idx, 'Options:', question.options);
+    if (idx < 0 || idx >= question.options.length || !question.options[idx]) return '';
     const answerText = question.options[idx].replace(/^([A-D]\.|[A-D])\s*/, '');
-    return `${question.correctAnswer}. ${answerText}`;
+    return `${letter}. ${answerText}`;
   }
 
   isMCQCorrect(question: Question): boolean {
@@ -193,33 +223,60 @@ export class QuizViewerComponent implements OnInit {
     return userAnswer === question.correctAnswer;
   }
 
+
   // Submit quiz
   submitQuiz(): void {
-    if (!this.quizResponse) return;
+  if (!this.quizResponse) return;
 
-    this.isLoading = true;
-    this.errorMessage = '';
+  if (!this.isQuizComplete()) {
+    this.showIncompleteAnswersWarning = true; // Show the modal
+    return;
+  }
 
-    const gradeRequest = this.quizService.createGradeRequest(this.userAnswers, this.quizResponse);
+  this.isLoading = true;
+  this.errorMessage = '';
 
-    this.quizService.submitAnswers(gradeRequest).subscribe({
-      next: (response: GradeResponse) => {
-        this.gradeResponse = response;
-        this.scorePercentage = response.final_score;
-        this.showResultsModal = true;
-        this.isLoading = false;
-        console.log('Quiz graded successfully:', response);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = error.message || 'Failed to grade quiz. Please try again.';
-        console.error('Error grading quiz:', error);
-        // Still show results modal with local calculation
-        this.calculateLocalScore();
-        this.showResultsModal = true;
+  const gradeRequest = this.quizService.createGradeRequest(this.userAnswers, this.quizResponse);
+
+  this.quizService.submitAnswers(gradeRequest).subscribe({
+    next: (response: GradeResponse) => {
+      this.gradeResponse = response;
+      this.scorePercentage = response.final_score;
+
+      // Update questions with feedback from grading response
+      this.updateQuestionsWithFeedback(response);
+
+      this.showResultsModal = true;
+      this.isLoading = false;
+      console.log('Quiz graded successfully:', response);
+    },
+    error: (error) => {
+      this.isLoading = false;
+      this.errorMessage = error.message || 'Failed to grade quiz. Please try again.';
+      console.error('Error grading quiz:', error);
+      this.calculateLocalScore();
+      this.showResultsModal = true;
+    }
+  });
+  }
+
+  private updateQuestionsWithFeedback(gradeResponse: GradeResponse): void {
+    if (!gradeResponse.essay_feedback || gradeResponse.essay_feedback.length === 0) {
+      return;
+    }
+
+    // Find essay questions and update them with feedback
+    let essayIndex = 0;
+    this.questions.forEach(question => {
+      if (question.type === 'essay' && essayIndex < gradeResponse.essay_feedback.length) {
+        question.feedback = gradeResponse.essay_feedback[essayIndex];
+        essayIndex++;
       }
     });
   }
+
+
+
 
   private calculateLocalScore(): void {
     let totalObjective = 0;
@@ -246,13 +303,110 @@ export class QuizViewerComponent implements OnInit {
     this.scorePercentage = totalObjective > 0 ? (correctObjective / totalObjective) * 100 : 0;
   }
 
+  // Save quiz to backend and print in console
+  private saveQuizToHistory(): void {
+    if (this.quizSaved) {
+      console.log('Quiz already saved to backend.');
+      return;
+    }
+    if (!this.quizResponse || !this.questions || this.questions.length === 0) {
+      console.warn('No quiz data to save.');
+      return;
+    }
+    // Map questions to QuizQuestion[]
+    const quizQuestions = this.questions.map((q) => {
+      let userAnswer = '';
+      let rightAnswer = '';
+      if (q.type === 'multiple_choice') {
+        const mcqIndex = this.getMCQIndex(q.id);
+        let userLetter = mcqIndex !== -1 && this.userAnswers.mcqs && this.userAnswers.mcqs[mcqIndex] ? this.userAnswers.mcqs[mcqIndex] : '';
+        let userText = '';
+        let rightLetter = '';
+        let rightText = '';
+        if (typeof q.correctAnswer === 'number') {
+          rightLetter = String.fromCharCode(65 + q.correctAnswer);
+        } else if (typeof q.correctAnswer === 'string') {
+          rightLetter = q.correctAnswer.toUpperCase();
+        }
+        if (typeof q.correctAnswer === 'number' && q.options && q.options[q.correctAnswer]) {
+          rightText = q.options[q.correctAnswer];
+        }
+        if (userLetter && q.options) {
+          const userIdx = userLetter.charCodeAt(0) - 65;
+          userText = q.options[userIdx] || '';
+        }
+        userAnswer = userLetter && userText ? `${userLetter} (${userText})` : (userLetter || '');
+        rightAnswer = rightLetter && rightText ? `${rightLetter} (${rightText})` : (rightLetter || '');
+      } else if (q.type === 'true_false') {
+        const tfIndex = this.getTrueFalseIndex(q.id);
+        let userVal = tfIndex !== -1 && this.userAnswers.true_false && typeof this.userAnswers.true_false[tfIndex] !== 'undefined' && this.userAnswers.true_false[tfIndex] !== null
+          ? String(this.userAnswers.true_false[tfIndex])
+          : '';
+        let rightVal = typeof q.correctAnswer !== 'undefined' && q.correctAnswer !== null ? String(q.correctAnswer) : '';
+        userAnswer = userVal ? `${userVal} (${userVal === 'true' ? 'True' : userVal === 'false' ? 'False' : ''})` : '';
+        rightAnswer = rightVal ? `${rightVal} (${rightVal === 'true' ? 'True' : rightVal === 'false' ? 'False' : ''})` : '';
+      } else if (q.type === 'essay') {
+        const essayIndex = this.getEssayIndex(q.id);
+        let userText = essayIndex !== -1 && this.userAnswers.essays && this.userAnswers.essays[essayIndex] ? this.userAnswers.essays[essayIndex] : '';
+        let rightText = typeof q.correctAnswer === 'string' ? q.correctAnswer : '';
+        userAnswer = userText || '';
+        rightAnswer = rightText || '';
+      }
+      return {
+        question: q.question || '',
+        userAnswer: userAnswer || '',
+        rightAnswer: rightAnswer || '',
+        feedback:q.feedback || "No FeedBack",
+      };
+    });
+    const score = Math.round(this.scorePercentage);
+
+    // Collect feedback from questions
+    const feedback = this.questions.map(q => q.feedback).filter(f => f && f.trim() !== '');
+
+
+    const quizData = {
+      Score: score,
+      Level:this.difficulty,
+      Questions: quizQuestions,
+    };
+    console.log('Quiz payload:', quizData);
+    this.historyService.addQuiz(quizData).subscribe({
+      next: (res) => {
+        this.quizSaved = true;
+        console.log('Quiz data sent to backend successfully:', res);
+        console.log("the data are: ", quizData);
+
+      },
+      error: (err) => {
+        console.error('Failed to send quiz data to backend:', err);
+      }
+    });
+  }
+
   // Close results modal
   closeResultsModal(): void {
+    this.saveQuizToHistory();
     this.showResultsModal = false;
+    this.gradeResponse = null;
+    this.scorePercentage = 0;
+    this.quizResponse = null;
+    this.questions = [];
+    this.userAnswers = { mcqs: [], true_false: [], essays: [] };
+    localStorage.removeItem('currentQuiz');
+    this.goBackToQuiz();
   }
 
   // Navigate back to quiz generation
   goBackToQuiz(): void {
+    this.showResultsModal = false;
+    this.gradeResponse = null;
+    this.scorePercentage = 0;
+    this.quizResponse = null;
+    this.questions = [];
+    this.userAnswers = { mcqs: [], true_false: [], essays: [] };
+    // Clear stored quiz data
+    localStorage.removeItem('currentQuiz');
     this.router.navigate(['/quiz']);
   }
 
@@ -288,7 +442,7 @@ export class QuizViewerComponent implements OnInit {
         } else if (question.type === 'essay') {
           correctAnswerText = question.correctAnswer as string;
         }
-        console.log(`Q${idx + 1}: ${question.question}\nCorrect Answer: ${correctAnswerText}`);
+        // console.log(`Q${idx + 1}: ${question.question}\nCorrect Answer: ${correctAnswerText}`);
       });
 
       // Create Word document
@@ -594,5 +748,16 @@ export class QuizViewerComponent implements OnInit {
     answeredQuestions += this.userAnswers.true_false.filter(answer => answer !== null).length;
     answeredQuestions += this.userAnswers.essays.filter(answer => answer.trim() !== '').length;
     return totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0;
+  }
+
+  ngOnDestroy(): void {
+    this.quizResponse = null;
+    this.questions = [];
+    this.userAnswers = {
+      mcqs: [],
+      true_false: [],
+      essays: []
+    };
+    this.goBackToQuiz();
   }
 }

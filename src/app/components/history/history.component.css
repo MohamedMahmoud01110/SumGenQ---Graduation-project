@@ -20,7 +20,7 @@
   margin-bottom: 40px;
   padding: 40px 20px;
   background: #00ADB5;
-  background: linear-gradient(45deg, #00ADB5, #764ba2);
+  background: linear-gradient(45deg, #00ADB5, #114551);
 
   border-radius: 20px;
   backdrop-filter: blur(10px);
@@ -354,7 +354,7 @@
 /* Summary Cards */
 .summary-card {
   /* background: var(--bg-form) !important; */
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(30, 30, 30, 0.95);
   border-radius: 20px;
   padding: 25px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
@@ -421,7 +421,11 @@
   display: flex;
   gap: 6px;
 }
-
+.splitter{
+  width: 50px;
+  height: 50px;
+  background-color: #007b8a;
+}
 .action-btn {
   background: rgba(0, 0, 0, 0.05);
   background:var(--bg-main);
@@ -587,7 +591,7 @@
 
 .modal-body {
   padding: 25px;
-  text-align: center;
+  text-align: left;
   position: relative;
 }
 
@@ -631,7 +635,19 @@
   transform: translateY(-2px);
 }
 
+.feedback-item {
+  background: #208a39;
+  border-radius: 8px;
+  padding: 1rem;
+  border-left: 4px solid #28a745;
+}
 
+.your-answer{
+  color: rgb(40, 40, 240) !important;
+}
+.correct-answer{
+  color: #28a745 !important;
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -728,7 +744,7 @@
 @media (prefers-color-scheme: dark) {
   .summary-card {
     background: rgba(30, 30, 30, 0.95);
-    color: #fff;
+    color: var(--text-main);
   }
 
   .card-title h3 {
