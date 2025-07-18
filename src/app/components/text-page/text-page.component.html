@@ -34,7 +34,7 @@
                 </ul>
             </div> -->
             <div class=" w-75 d-flex justify-content-end  ms-1 ">
-                <button (click)="exampleText($event)" class="bgg-secondary hh tex-btn text-main p-2 ss px-3 me-2 text_example " title="Display a Text Example">Text Example</button>
+                <button (click)="exampleText($event)" class="bgg-secondary hh tex-btn text-main p-1 ss px-3 me-2 text_example " title="Display a Text Example">Text Example</button>
             </div>
             <div class="d-flex justify-content-center align-items-center rounded-5 h-75">
               <i class="fa-solid fa-microchip tex-btn models-options mt-1"
@@ -53,7 +53,7 @@
                   </span>
                 </li>
               </ul>
-                <i class="fa-solid fa-trash mx-4 pb-2 clr-icon" title="Clear Text" (click)="clearText()"></i>
+                <i class="fa-solid fa-trash mx-4 pb-2 clr-icon pt-1" title="Clear Text" (click)="clearText()"></i>
             </div>
 
               </div>
@@ -192,7 +192,7 @@
                 <span class="ps-1 mx-1 d-inline-block mt-1">summary</span>
               </li>
 
-              <li class="px-2  rounded-2"
+              <li class="px-2  rounded-2 bullet"
                   [ngClass]="{'active-option': selectedType === 'bullet'}"
                   (click)="selectType('bullet')" (click)="submitText($event)">
                 <img src="images/bullets-number.png">
