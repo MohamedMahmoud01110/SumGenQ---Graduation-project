@@ -997,7 +997,7 @@
   font-size: 1.5rem;
   color: #00ADB5;
   cursor: pointer;
-  z-index: 10;
+  z-index: 100000;
 }
 
 .close-modal:hover {

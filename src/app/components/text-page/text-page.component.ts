@@ -365,6 +365,7 @@ export class TextPageComponent {
   closeWarning(): void {
     this.showTextLengthWarning = false;
     this.showArabicWarning = false;
+    this.showStatsModal = false;
   }
 
   clearText() {
