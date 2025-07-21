@@ -2,15 +2,15 @@
   <div class="container ">
 
     <!-- Quiz Selection Screen -->
-    <div  class="quiz-selection">
+    <div  class="quiz-selection ">
       <div class="position-relative" [class.hide]="selectedFile" >
-        <img [src]="theme==='dark'  ? 'images/drag-arrow-dark.jpg' : 'images/drag-arrow-light.jpg'" alt="Large curved arrow pointing toward the file upload area, indicating where to drag and drop documents. The arrow is set against a clean interface designed to guide users. No text is present in the image. The tone is clear and instructional." style="width: 150px; position: absolute; right: 110px; top: -70px;">
-        <img [src]="theme==='dark'  ? 'images/arrow-dark.jpg' : 'images/arrow-light.jpg'"  alt="" style="width: 80px; position: absolute; right:280px; top: -37px;">
+        <img [src]="theme==='dark'  ? 'images/drag-arrow-dark.jpg' : 'images/drag-arrow-light.jpg'" class="img1" alt="Large curved arrow pointing toward the file upload area, indicating where to drag and drop documents. The arrow is set against a clean interface designed to guide users. No text is present in the image. The tone is clear and instructional." style="width: 150px; position: absolute; right: 110px; top: -70px;">
+        <img [src]="theme==='dark'  ? 'images/arrow-dark.jpg' : 'images/arrow-light.jpg'" class="img2"  alt="" style="width: 80px; position: absolute; right:280px; top: -37px;">
 
         </div>
 
         <!-- File Upload Section -->
-        <div class="d-flex justify-content-center align-items-center mb-5 p-5 mt-3 ">
+        <div class="d-flex justify-content-center align-items-center mb-5 p-5 mt-3 form_section">
           <div class="col-md-8 text-center p-5 mb-2 form_container rounded-5 mt-3">
             <div class="upload-section">
               <div class="upload-area" id="uploadArea"

@@ -977,7 +977,7 @@
   flex-direction: column !important;
   height: 440px !important;
   width: 90% !important;
-  /* background-color: tomato !important; */
+
 }
 .bg{
   top: 0 !important;
@@ -1014,6 +1014,12 @@
 .warning_icon{
 margin-bottom: 8px !important;
 margin-top: -8px !important;
+}
+.history-header{
+  width: 100%;
+}
+.container{
+  margin-top: 80px !important;
 }
 
 }

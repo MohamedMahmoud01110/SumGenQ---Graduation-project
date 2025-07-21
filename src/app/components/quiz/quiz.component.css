@@ -847,6 +847,124 @@
   }
 }
 
+@media (max-width: 550px){
+  .img1{
+    right: 50px !important;
+    top: -50px !important;
+  }
+  .img2{
+    right: 220px !important;
+    top: -10px !important;
+  }
+  .form_section{
+    padding: 0px !important;
+    width: 100% !important;
+  }
+  .form_container{
+    margin-top: 100px !important;
+    padding: 20px !important;
+  }
+  .quiz-section{
+    padding: 0px !important;
+  }
+  .upload-area{
+    padding-top: 30px;
+  }
+  .container{
+    margin-top: 160px !important;
+    margin-bottom: 150px !important;
+  }
+
+}
+@media all and (min-width: 500px) and (max-width: 700px){
+  .warning_box2 {
+    flex-direction: column !important;
+    height: 490px !important;
+    width: 85% !important;
+  }
+  .bg{
+    top: 0 !important;
+    left: 0px !important;
+    width: 100% !important;
+    height: 200px !important;
+  }
+  .bg span{
+    background: linear-gradient(to bottom, transparent, rgb(255 255 255 / .7) 50%, white 100%) !important;
+    width:100%!important;
+    right: 0px !important;
+    top: 20px !important;
+  }
+  .bg img{
+    width: 170px !important;
+    margin: auto  !important;
+    top: 38px !important;
+    left : 27% !important;
+  }
+  .close{
+    top: -180px !important;
+    z-index: 1000 !important;
+    font-size: 26px;
+  }
+  .close2{
+    top: -197px !important;
+    z-index: 1000 !important;
+  }
+  .warning_box_content {
+    position: absolute !important;
+    bottom: 40px !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+}
+
+@media all and (min-width: 300px) and (max-width: 500px){
+  .warning_box2 {
+    flex-direction: column !important;
+    height: 440px !important;
+    width: 90% !important;
+  }
+  .bg{
+    top: 0 !important;
+    left: 0px !important;
+    width: 100% !important;
+    height: 200px !important;
+  }
+  .bg span{
+    background: linear-gradient(to bottom, transparent, rgb(255 255 255 / .7) 50%, white 100%) !important;
+    width:100%!important;
+    right: 0px !important;
+    top: 20px !important;
+  }
+  .bg img{
+    width: 170px !important;
+    margin: auto  !important;
+    top: 38px !important;
+    left : 22% !important;
+  }
+  .close{
+    top: -180px !important;
+    z-index: 1000 !important;
+  }
+  .close2{
+    top: -177px !important;
+    z-index: 1000 !important;
+  }
+  .warning_box_content {
+    position: absolute !important;
+    top: 200px !important;
+    bottom: 80px !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  .warning_icon{
+    margin-bottom: 8px !important;
+    margin-top: -8px !important;
+  }
+  .quiz-section{
+    padding:  0px !important;
+  }
+}
+
 /* Modal Overlay */
 .modal-overlay {
   position: fixed;

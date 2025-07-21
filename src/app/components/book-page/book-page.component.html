@@ -1,15 +1,15 @@
 <section id="book_summarization" class="">
-  <div class="container pt-3  mt-5  mb-5  ">
+  <div class="container pt-3  mt-5  mb-5 ">
     <div class="row  ">
-      <div class="position-relative" [class.hide]="selectedFile" >
-      <img [src]="theme==='dark'  ? 'images/drag-arrow-dark.jpg' : 'images/drag-arrow-light.jpg'" alt="Large curved arrow pointing toward the file upload area, indicating where to drag and drop documents. The arrow is set against a clean interface designed to guide users. No text is present in the image. The tone is clear and instructional." style="width: 150px; position: absolute; right: 110px; top: -70px;">
-      <img [src]="theme==='dark'  ? 'images/arrow-dark.jpg' : 'images/arrow-light.jpg'"  alt="" style="width: 80px; position: absolute; right:280px; top: -37px;">
+      <div class="position-relative img-conatiner" [class.hide]="selectedFile" >
+      <img [src]="theme==='dark'  ? 'images/drag-arrow-dark.jpg' : 'images/drag-arrow-light.jpg'" class="img1" alt="Large curved arrow pointing toward the file upload area, indicating where to drag and drop documents. The arrow is set against a clean interface designed to guide users. No text is present in the image. The tone is clear and instructional." style="width: 150px; position: absolute; right: 110px; top: -70px;">
+      <img [src]="theme==='dark'  ? 'images/arrow-dark.jpg' : 'images/arrow-light.jpg'"  class="img2" alt="" style="width: 80px; position: absolute; right:280px; top: -37px;">
 
       </div>
 
-      <div class="d-flex justify-content-center align-items-center mb-5 p-5 mt-3 ">
+      <div class="d-flex justify-content-center align-items-center mb-5 p-5 mt-3 section-card">
         <div  [ngClass]="{'col-md-8 ': analysisResult === null, 'col-md-12': analysisResult !== null}" class=" text-center p-5 mb-2 form_container rounded-5 ">
-          <div class="upload-section" >
+          <div class="upload-section " >
             <div class="upload-area" id="uploadArea"
               (dragover)="onDragOver($event)"
               (dragleave)="onDragLeave($event)"
@@ -131,7 +131,7 @@
           </div>
           <!-- URL Input Modal -->
           <div *ngIf="showUrlModal" class="overlay2">
-            <div class="warning_box2 warning-url rounded-5 p-4 text-center">
+            <div class="warning_box2 warning-url rounded-5 p-4 text-center ">
               <div class="bg p-3 rounded-5">
                 <span class="rounded-5"></span>
                 <img src="images/url-2.png" alt="" class="pt-3">
@@ -150,7 +150,7 @@
                     (keyup.enter)="processUrl()"
                   >
                 </div>
-                <div class="d-flex justify-content-center mt-3">
+                <div class="d-flex justify-content-center mt-3 ">
                   <button type="button"
                           class="btn btn1 me-2"
                           (click)="processUrl()"

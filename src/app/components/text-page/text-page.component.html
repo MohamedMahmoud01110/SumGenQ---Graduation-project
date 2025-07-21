@@ -65,36 +65,6 @@
             <p class="ms-3 ">{{ wordCountUserInput }} word{{ wordCountUserInput !== 1 ? 's' : '' }}</p>
           </div>
 
-          <!-- <div class="checkboxs d-flex justify-content-between mb-3 ">
-            <div class="exam-check">
-              <input type="checkbox" id="myCheckbox">
-              <label for="myCheckbox" class="text-main mx-2">Exam Bot</label>
-            </div>
-          </div> -->
-
-          <!-- <div class="d-flex modes_container">
-            <h3 class="text-main">Modes: </h3>
-            <div class="w-100 mx-4 bg-form rounded-5 d-flex ">
-              <p class="text-main px-3 fw-bold my-1">Summary Length: </p>
-              <input
-                  type="range"
-                  id="progress-bar"
-                  min="25"
-                  max="100"
-                  step="25"
-                  value="50"
-                  name="length"
-                  (input)="updateValue($event)"/>
-                <span id="length-value" class="text-main my-2">{{ selectedLength }}%</span>
-            </div>
-          </div> -->
-            <!-- <h3>Model</h3> -->
-            <!-- <div class="w-25 mx-4 bg-form rounded-5 d-flex ">
-              <p class="text-main px-3 fw-bold my-1">Model: </p>
-              <select [(ngModel)]="selectedModel" class="form-select bg-form text-main" aria-label="Default select example">
-                <option *ngFor="let model of models" [value]="model">{{ model }}</option>
-              </select>
-          </div> -->
           <button (click)="submitText($event)" class="mt-3 bgg-secondary hh p-2 ss px-3">
             @if(isLoading){
               Summarize
@@ -180,10 +150,6 @@
           <div class="d-flex justify-content-between mb-1 ">
 
             <label for="exampleFormControlTextarea1" class="form-label text-main">Summarized</label>
-            <!-- <ul class="text-main list-unstyled mb-0  d-flex w-50 justify-content-between">
-              <li class=" px-2"><img src="images/summary.png" class="-pt-1"><span class="ps-1 mx-1 d-inline-block mt-1">summary</span> </li>
-              <li class=" px-2"><img src="images/bullets-number.png"> <span class="  ps-1 mx-1 d-inline-block mt-1">bullet points</span></li>
-            </ul> -->
             <ul class="text-main list-unstyled mb-0 d-flex w-50 justify-content-between " [class.hide]="summarizedText.value === ''">
               <li class="px-2"
                   [ngClass]="{'active-option': selectedType === 'summary'}"
@@ -230,7 +196,7 @@
             [title]="copied ? 'Text copied!' : 'Copy Text'"
             (click)="summarizedText.value !== '' && copyText()">
           <!-- <i class="fa-solid fa-chart-bar stats-icon" title="Show statistics" (click)="showStatsModal = true" [class.hide]="summarizedText.value === ''"></i> -->
-          <i class="fa-solid fa-download" (click)="downloadText()" [class.hide]="summarizedText.value === ''" alt="Download Icon" title="Download Text"></i>
+          <i class="fa-solid fa-download download-icon" (click)="downloadText()" [class.hide]="summarizedText.value === ''" alt="Download Icon" title="Download Text"></i>
         </div>
         <div class="d-flex">
           <p class="me-4  mt-1" style="font-size: 20px; font-weight: bold;" [class.hide]="summarizedText.value === ''">Voice gender :</p>
