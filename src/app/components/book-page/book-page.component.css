@@ -602,7 +602,9 @@ h4{
     font-size: 35px !important;
   }
 
-
+  .close{
+    font-size: 26px !important;
+  }
   .url_icon{
     display: none;
   }
