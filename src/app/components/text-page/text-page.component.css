@@ -855,7 +855,10 @@ transition:all  0.3s  ease ;
 .dropdown-menu-dark{
 background-color: #343A40 !important;
 }
+.dropdown-menu-light{
+  background-color: white !important;
 
+}
 div.dropdown-menu li{
 color: var(--text-main);
 }

@@ -205,7 +205,7 @@
               <button class="btn bgg-secondary w-100 dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 {{gender}}
               </button>
-              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton"  [ngClass]="getTheme() =='dark' ? 'dropdown-menu-dark' : ''">
+              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton"  [ngClass]="getTheme() =='dark' ? 'dropdown-menu-dark' : 'dropdown-menu-light'">
                 <li class="dropdown-item" (click)="changeGender('female')" (click)="toggleSpeech()">Female</li>
                 <li class="dropdown-item"  (click)="changeGender('male')" (click)="toggleSpeech()">Male</li>
               </div>
